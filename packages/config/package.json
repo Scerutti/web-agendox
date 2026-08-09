@@ -1,0 +1,12 @@
+{
+  "name": "@agendox/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tailwind/preset": "./tailwind/preset.cjs"
+  },
+  "dependencies": {
+    "tailwindcss-animate": "^1.0.7"
+  }
+}

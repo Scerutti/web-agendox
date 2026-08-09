@@ -1,0 +1,17 @@
+@import '@agendox/ui/styles/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Debe quedar en este archivo (no en tokens.css): `@layer` requiere que las
+   directivas `@tailwind` esten en el mismo archivo que compila PostCSS. */
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}

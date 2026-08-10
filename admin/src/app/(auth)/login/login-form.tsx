@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Label, toast } from '@agendox/ui';
+import { API_INTERNAL_URL } from '@/lib/env';
 
 export function LoginForm() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export function LoginForm() {
     const form = new FormData(e.currentTarget);
     setBusy(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${API_INTERNAL_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

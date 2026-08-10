@@ -25,16 +25,28 @@ Cada app es un Next independiente, con su propio login, sus propias cookies y
 su propio dominio. **No hay una URL única donde “elegir” si entrás como Owner o
 como Super Admin**: el rol lo define *qué app* abrís.
 
-| App         | Rol                    | Root Directory en Vercel | Login                  | Cookie                | Endpoint del backend  |
-| ----------- | ---------------------- | ------------------------ | ---------------------- | --------------------- | --------------------- |
-| `dashboard` | Owner / staff del negocio | `frontend/dashboard`  | `/login` (“Panel del negocio”) | `agx_at` + `agx_rt` | `/auth/login`         |
-| `admin`     | Super Admin plataforma | `frontend/admin`         | `/login` (“Acceso de super administración”) | `agx_admin_at` | `/admin/auth/login`   |
-| `booking`   | Cliente final (OTP)    | `frontend/booking`       | `/[slug]/portal`       | `agx_cust_<slug>`     | `/public/:slug/otp/*` |
+La raíz de este repo es la carpeta `frontend/`, así que el **Root Directory**
+de cada proyecto de Vercel es el nombre de la app, sin prefijo.
+
+| App         | Rol                    | Root Directory | Login                  | Cookie                | Endpoint del backend  |
+| ----------- | ---------------------- | -------------- | ---------------------- | --------------------- | --------------------- |
+| `dashboard` | Owner / staff del negocio | `dashboard` | `/login` (“Panel del negocio”) + `/register` | `agx_at` + `agx_rt` | `/auth/login`         |
+| `admin`     | Super Admin plataforma | `admin`        | `/login` (“Acceso de super administración”) | `agx_admin_at` | `/admin/auth/login`   |
+| `booking`   | Cliente final (OTP)    | `booking`      | `/[slug]/portal`       | `agx_cust_<slug>`     | `/public/:slug/otp/*` |
 
 Cada proyecto necesita su propia `API_INTERNAL_URL` en *Settings → Environment
 Variables*, marcada para todos los entornos que uses (Production + Preview).
 Sin ella, la app falla con un error explícito en vez de pegarle a un host
 hardcodeado.
+
+Para agregar una app al deploy: *Vercel → Add New → Project*, importás el mismo
+repo, cambiás el Root Directory al de la tabla y le cargás `API_INTERNAL_URL`.
+Cada proyecto queda en su propio dominio.
+
+Recordá que el Super Admin no se registra por la UI: se bootstrapea en el
+backend con `pnpm db:seed:superadmin` (`SUPERADMIN_EMAIL` +
+`SUPERADMIN_PASSWORD`). Los owners sí se crean solos desde `/register` del
+dashboard.
 
 ### Patrón BFF (importante)
 

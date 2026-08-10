@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { API_INTERNAL_URL } from '@/lib/env';
+import { apiUrl } from '@/lib/env';
 import { RT, clearAuthCookies } from '@/lib/auth/cookies';
 
 export async function POST() {
@@ -9,7 +9,7 @@ export async function POST() {
 
   if (refreshToken) {
     try {
-      await fetch(`${API_INTERNAL_URL}/auth/logout`, {
+      await fetch(apiUrl('/auth/logout'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),

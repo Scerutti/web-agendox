@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Label, toast } from '@agendox/ui';
-import { API_INTERNAL_URL } from '@/lib/env';
 
 export function LoginForm() {
   const router = useRouter();
@@ -14,7 +13,10 @@ export function LoginForm() {
     const form = new FormData(e.currentTarget);
     setBusy(true);
     try {
-      const res = await fetch(`${API_INTERNAL_URL}/api/auth/login`, {
+      // Same-origin contra la route handler de Next (BFF): es la que habla con
+      // el backend y setea la cookie httpOnly del super admin. Nunca pegarle
+      // al backend desde el browser.
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -29,6 +31,8 @@ export function LoginForm() {
       }
       router.push('/');
       router.refresh();
+    } catch {
+      toast.error('Error de conexión');
     } finally {
       setBusy(false);
     }

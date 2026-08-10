@@ -1,8 +1,8 @@
 import { ApiError, toApiError } from '@agendox/api-client';
-import { API_INTERNAL_URL } from '../env';
+import { apiUrl } from '../env';
 
 async function publicFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_INTERNAL_URL}${path}`, {
+  const res = await fetch(apiUrl(path), {
     ...init,
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     cache: 'no-store',

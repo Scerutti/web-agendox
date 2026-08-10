@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { ApiError, toApiError } from '@agendox/api-client';
-import { API_INTERNAL_URL } from '../env';
+import { apiUrl } from '../env';
 import { AT } from '../auth/cookies';
 
 /**
@@ -16,7 +16,7 @@ export async function serverFetch<T>(
   const store = await cookies();
   const token = store.get(AT)?.value;
 
-  const res = await fetch(`${API_INTERNAL_URL}${path}`, {
+  const res = await fetch(apiUrl(path), {
     ...init,
     headers: {
       'Content-Type': 'application/json',

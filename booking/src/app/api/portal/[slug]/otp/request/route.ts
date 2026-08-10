@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { API_INTERNAL_URL } from '@/lib/env';
+import { apiUrl } from '@/lib/env';
 
 export async function POST(
   req: Request,
@@ -11,7 +11,7 @@ export async function POST(
     return NextResponse.json({ message: 'Email requerido' }, { status: 400 });
   }
 
-  const r = await fetch(`${API_INTERNAL_URL}/public/${slug}/otp/request`, {
+  const r = await fetch(apiUrl(`/public/${slug}/otp/request`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: body.email }),

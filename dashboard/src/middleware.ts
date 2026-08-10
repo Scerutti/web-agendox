@@ -7,7 +7,7 @@ import {
   type AuthTokens,
 } from '@/lib/auth/cookies';
 import { isExpired } from '@/lib/auth/jwt';
-import { API_INTERNAL_URL } from '@/lib/env';
+import { apiUrl } from '@/lib/env';
 
 const PUBLIC_PATHS = ['/login', '/register'];
 
@@ -19,7 +19,7 @@ function isPublic(pathname: string): boolean {
 
 async function tryRefresh(refreshToken: string): Promise<AuthTokens | null> {
   try {
-    const res = await fetch(`${API_INTERNAL_URL}/auth/refresh`, {
+    const res = await fetch(apiUrl('/auth/refresh'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),

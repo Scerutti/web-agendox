@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { API_INTERNAL_URL } from '@/lib/env';
+import { apiUrl } from '@/lib/env';
 import { setAuthCookies } from '@/lib/auth/cookies';
 
 interface RegisterBody {
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const r = await fetch(`${API_INTERNAL_URL}/organizations/register`, {
+  const r = await fetch(apiUrl('/organizations/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   if (!r.ok) return NextResponse.json(data, { status: r.status });
 
   // Auto-login para dejar la sesión lista tras registrar.
-  const lr = await fetch(`${API_INTERNAL_URL}/auth/login`, {
+  const lr = await fetch(apiUrl('/auth/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

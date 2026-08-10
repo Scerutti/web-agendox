@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { API_INTERNAL_URL } from '@/lib/env';
+import { apiUrl } from '@/lib/env';
 import { setAdminCookie } from '@/lib/auth/cookies';
 
 export async function POST(req: Request) {
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const r = await fetch(`${API_INTERNAL_URL}/admin/auth/login`, {
+  const r = await fetch(apiUrl('/admin/auth/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: body.email, password: body.password }),

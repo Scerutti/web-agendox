@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { API_INTERNAL_URL } from '@/lib/env';
+import { apiUrl } from '@/lib/env';
 import { setCustomerCookie } from '@/lib/customer/cookies';
 
 export async function POST(
@@ -18,7 +18,7 @@ export async function POST(
     );
   }
 
-  const r = await fetch(`${API_INTERNAL_URL}/public/${slug}/otp/verify`, {
+  const r = await fetch(apiUrl(`/public/${slug}/otp/verify`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: body.email, code: body.code }),

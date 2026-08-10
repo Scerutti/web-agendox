@@ -1,13 +1,14 @@
 # Agendox — Frontend
 
-Workspace **pnpm + Turborepo** acotado a `frontend/`. Dos apps Next.js (App Router + TS + Tailwind + shadcn/ui) y packages compartidos.
+Workspace **pnpm + Turborepo** acotado a `frontend/`. Apps Next.js (App Router + TS + Tailwind + shadcn/ui) y packages compartidos.
 
 ## Estructura
 
 ```
 frontend/
-├── dashboard/            # Panel del negocio (staff) — :3001
+├── dashboard/            # Panel del negocio (owner/staff) — :3001
 ├── booking/              # Público + Customer Portal — :3002
+├── admin/                # Super Admin de la plataforma — :3003
 └── packages/
     ├── config/           # Preset de Tailwind (theming) + base compartida
     ├── domain/           # Enums, matriz de transiciones, formatMoney, formatInOrgTz
@@ -16,7 +17,32 @@ frontend/
     └── ui/               # shadcn/ui + cn + theming + NotificationBell + Toaster
 ```
 
-> `admin/` (Super Admin) y `landing/` quedan fuera del MVP (solo `.gitkeep`).
+> `landing/` queda fuera del MVP (solo `.gitkeep`).
+
+## Deploys — una app = un proyecto de Vercel
+
+Cada app es un Next independiente, con su propio login, sus propias cookies y
+su propio dominio. **No hay una URL única donde “elegir” si entrás como Owner o
+como Super Admin**: el rol lo define *qué app* abrís.
+
+| App         | Rol                    | Root Directory en Vercel | Login                  | Cookie                | Endpoint del backend  |
+| ----------- | ---------------------- | ------------------------ | ---------------------- | --------------------- | --------------------- |
+| `dashboard` | Owner / staff del negocio | `frontend/dashboard`  | `/login` (“Panel del negocio”) | `agx_at` + `agx_rt` | `/auth/login`         |
+| `admin`     | Super Admin plataforma | `frontend/admin`         | `/login` (“Acceso de super administración”) | `agx_admin_at` | `/admin/auth/login`   |
+| `booking`   | Cliente final (OTP)    | `frontend/booking`       | `/[slug]/portal`       | `agx_cust_<slug>`     | `/public/:slug/otp/*` |
+
+Cada proyecto necesita su propia `API_INTERNAL_URL` en *Settings → Environment
+Variables*, marcada para todos los entornos que uses (Production + Preview).
+Sin ella, la app falla con un error explícito en vez de pegarle a un host
+hardcodeado.
+
+### Patrón BFF (importante)
+
+El browser **nunca** le pega al backend: siempre habla same-origin con las
+route handlers de Next (`fetch('/api/auth/login')`), y esas route handlers
+—server-side— llaman al backend con `apiUrl()` y setean las cookies httpOnly.
+Por eso `API_INTERNAL_URL` no lleva prefijo `NEXT_PUBLIC` y `src/lib/env.ts`
+no se importa desde componentes `'use client'`.
 
 ## Puesta en marcha (los comandos pnpm los corre el usuario)
 
@@ -32,10 +58,11 @@ frontend/
    pnpm gen:api
    ```
    Reemplaza el placeholder de `packages/api-types/src/schema.ts` con el contrato real.
-5. Copiar envs:
+5. Copiar envs (obligatorio: `API_INTERNAL_URL` no tiene default):
    ```
    cp dashboard/.env.example dashboard/.env.local
    cp booking/.env.example booking/.env.local
+   cp admin/.env.example admin/.env.local
    ```
 6. Correr:
    ```
@@ -43,6 +70,7 @@ frontend/
    ```
    - Dashboard: http://localhost:3001
    - Booking:   http://localhost:3002
+   - Admin:     http://localhost:3003
 
 ## Verificación FM0 (entregable)
 

@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { ApiError, toApiError } from '@agendox/api-client';
 import type { AppointmentStatus } from '@agendox/domain';
-import { API_INTERNAL_URL } from '../env';
+import { apiUrl } from '../env';
 import { custCookieName } from '../customer/cookies';
 
 export async function customerFetch<T>(
@@ -11,7 +11,7 @@ export async function customerFetch<T>(
 ): Promise<T> {
   const store = await cookies();
   const token = store.get(custCookieName(slug))?.value;
-  const res = await fetch(`${API_INTERNAL_URL}${path}`, {
+  const res = await fetch(apiUrl(path), {
     ...init,
     headers: {
       'Content-Type': 'application/json',

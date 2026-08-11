@@ -1,5 +1,11 @@
 import { serverFetch } from './server';
-import type { AdminMetrics, AdminOrgDetail, AdminOrgListItem, SuperAdminMe } from './admin.types';
+import type {
+  AdminMetrics,
+  AdminOrgDetail,
+  AdminOrgListItem,
+  PlanView,
+  SuperAdminMe,
+} from './admin.types';
 
 // Los tipos y el copy de presentación viven en `admin.types.ts` para que los
 // componentes cliente los puedan importar sin arrastrar `next/headers`.
@@ -21,3 +27,6 @@ export function getOrganizations(params: {
 
 export const getOrganization = (id: string) =>
   serverFetch<AdminOrgDetail>(`/admin/organizations/${id}`);
+
+/** Planes activos, para elegir uno al dar de alta un negocio ya suscripto. */
+export const getPlans = () => serverFetch<PlanView[]>('/admin/plans');

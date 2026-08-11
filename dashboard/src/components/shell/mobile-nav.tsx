@@ -6,11 +6,19 @@ import { usePathname } from 'next/navigation';
 import type { Role } from '@agendox/domain';
 import { Button, Sheet, cn } from '@agendox/ui';
 import { ROLE_LABEL } from '@/lib/org-ui';
-import { NAV, isActive } from './nav';
+import type { OrganizationFeatures } from '@/lib/api/types';
+import { isActive, navFor } from './nav';
 
-export function MobileNav({ role }: { role: Role }) {
+export function MobileNav({
+  role,
+  features,
+}: {
+  role: Role;
+  features: OrganizationFeatures;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const items = navFor(features);
 
   // Close the drawer whenever navigation completes.
   useEffect(() => {
@@ -46,7 +54,7 @@ export function MobileNav({ role }: { role: Role }) {
           <p className="text-xs text-muted-foreground">{ROLE_LABEL[role]}</p>
         </div>
         <nav className="flex flex-col gap-1">
-          {NAV.map((item) =>
+          {items.map((item) =>
             item.enabled ? (
               <Link
                 key={item.href}

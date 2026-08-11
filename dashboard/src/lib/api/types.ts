@@ -18,7 +18,19 @@ export interface Session {
 export interface OrganizationFeatures {
   whatsappNotifications: boolean;
   logoUpload: boolean;
+  /** Sección de Suscripción visible. Apagada en cuentas de cortesía o internas. */
+  subscriptionsEnabled: boolean;
 }
+
+/**
+ * Fallback cuando no se pudo leer la organización. Espeja los defaults del
+ * backend: lo que todavía no existe, apagado; lo que ya funciona, prendido.
+ */
+export const DEFAULT_FEATURES: OrganizationFeatures = {
+  whatsappNotifications: false,
+  logoUpload: false,
+  subscriptionsEnabled: true,
+};
 
 export interface Organization {
   id: string;

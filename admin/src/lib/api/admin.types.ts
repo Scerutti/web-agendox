@@ -38,7 +38,19 @@ export interface AdminOrgListItem {
 export interface OrganizationFeatures {
   whatsappNotifications: boolean;
   logoUpload: boolean;
+  subscriptionsEnabled: boolean;
 }
+
+export interface PlanView {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  billingPeriod: string;
+}
+
+/** Con qué arranca comercialmente un negocio nuevo. */
+export type OrganizationBilling = 'TRIAL' | 'ACTIVE';
 
 export interface AdminOrgDetail extends AdminOrgListItem {
   ownerEmail: string | null;
@@ -68,6 +80,11 @@ export const FEATURE_UI: {
     key: 'logoUpload',
     label: 'Subida de logo como archivo',
     hint: 'Requiere almacenamiento de imágenes. Con el flag apagado, el negocio igual puede usar un logo por URL.',
+  },
+  {
+    key: 'subscriptionsEnabled',
+    label: 'Sección de Suscripción',
+    hint: 'Prendido por defecto. Apagalo en cuentas de cortesía, internas o de demo: el negocio deja de ver el plan y el checkout de pago.',
   },
 ];
 

@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -6,7 +7,11 @@ import {
 } from '@agendox/ui';
 import { formatDateInOrgTz } from '@agendox/domain';
 import { getPlans } from '@/lib/api/subscription';
-import { getCurrentOrganization, getSubscriptionStatus } from '@/lib/api/session';
+import {
+  getCurrentOrganization,
+  getOrganizationFeatures,
+  getSubscriptionStatus,
+} from '@/lib/api/session';
 import { NoAccess } from '@/components/no-access';
 import { SUBSCRIPTION_STATUS_UI } from '@/lib/subscription-ui';
 import { PlansList } from './plans-list';
@@ -16,8 +21,11 @@ export default async function SubscriptionPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const [{ status }, sub] = await Promise.all([searchParams, getSubscriptionStatus()]);
+  const [{ status }, features] = await Promise.all([searchParams, getOrganizationFeatures()]);
+  // Ocultar el link del menú no alcanza: la URL directa seguiría funcionando.
+  if (!features.subscriptionsEnabled) notFound();
 
+  const sub = await getSubscriptionStatus();
   if (!sub) {
     return (
       <div className="space-y-6">

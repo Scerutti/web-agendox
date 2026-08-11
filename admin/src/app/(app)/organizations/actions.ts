@@ -64,6 +64,12 @@ export async function createOrganization(
   _prev: CreateResult,
   formData: FormData,
 ): Promise<CreateResult> {
+  const billing = str(formData, 'billing') === 'ACTIVE' ? 'ACTIVE' : 'TRIAL';
+  const planId = str(formData, 'planId');
+  if (billing === 'ACTIVE' && !planId) {
+    return { ok: false, message: 'Elegí el plan que querés otorgar' };
+  }
+
   const payload = {
     organizationName: str(formData, 'organizationName'),
     slug: str(formData, 'slug').toLowerCase(),
@@ -74,6 +80,10 @@ export async function createOrganization(
       firstName: str(formData, 'ownerFirstName'),
       lastName: str(formData, 'ownerLastName'),
     },
+    billing,
+    // Solo viaja con ACTIVE: con TRIAL el backend lo ignora y un uuid vacío
+    // haría fallar la validación.
+    ...(billing === 'ACTIVE' ? { planId } : {}),
   };
 
   try {
@@ -105,6 +115,23 @@ export async function updateOrganization(
     return { ok: true, message: 'Datos actualizados' };
   } catch (e) {
     return failure(e, 'No se pudieron actualizar los datos');
+  }
+}
+
+export async function updateOwnerEmail(
+  id: string,
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  try {
+    await serverFetch(`/admin/organizations/${id}/owner-email`, {
+      method: 'PATCH',
+      body: JSON.stringify({ email: str(formData, 'ownerEmail') }),
+    });
+    revalidateOrg(id);
+    return { ok: true, message: 'Email del dueño actualizado' };
+  } catch (e) {
+    return failure(e, 'No se pudo actualizar el email del dueño');
   }
 }
 

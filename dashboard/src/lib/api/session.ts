@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { ApiError } from '@agendox/api-client';
 import { serverFetch } from './server';
 import { AT } from '../auth/cookies';
+import { DEFAULT_FEATURES } from './types';
 import type {
   Organization,
   OrganizationFeatures,
@@ -37,7 +38,7 @@ export async function getOrganizationFeatures(): Promise<OrganizationFeatures> {
     const org = await getCurrentOrganization();
     return org.features;
   } catch {
-    return { whatsappNotifications: false, logoUpload: false };
+    return DEFAULT_FEATURES;
   }
 }
 

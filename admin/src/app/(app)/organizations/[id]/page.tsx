@@ -11,6 +11,7 @@ import {
 import { OrgActions } from './org-actions';
 import { OrgFeaturesForm } from './org-features-form';
 import { OrgProfileForm } from './org-profile-form';
+import { OwnerEmailForm } from './owner-email-form';
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -98,6 +99,15 @@ export default async function OrganizationDetailPage({
         </CardHeader>
         <CardContent>
           <OrgProfileForm id={org.id} name={org.name} timezone={org.timezone} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Usuario dueño</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OwnerEmailForm id={org.id} ownerEmail={org.ownerEmail} />
         </CardContent>
       </Card>
 

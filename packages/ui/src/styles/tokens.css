@@ -8,6 +8,7 @@
    viven en el globals.css de cada app. */
 
 :root {
+  color-scheme: light;
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
@@ -31,6 +32,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
   --card: 222.2 84% 4.9%;
@@ -50,4 +52,26 @@
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
   --ring: 224.3 76.3% 48%;
+}
+
+/* Marca por organización.
+   `brandThemeVars()` (en @agendox/ui/lib/brand-theme) pone las custom
+   properties `--brand-*-light` / `--brand-*-dark` inline sobre el elemento que
+   lleve `.brand-scope`; estas reglas eligen la variante segun el tema activo.
+   El fallback de cada `var()` es el token por defecto del tema, para que una
+   organización sin colores configurados se vea igual que antes. */
+.brand-scope {
+  --primary: var(--brand-primary-light, 221.2 83.2% 53.3%);
+  --primary-foreground: var(--brand-primary-light-fg, 210 40% 98%);
+  --ring: var(--brand-primary-light, 221.2 83.2% 53.3%);
+  --secondary: var(--brand-secondary-light, 210 40% 96.1%);
+  --secondary-foreground: var(--brand-secondary-light-fg, 222.2 47.4% 11.2%);
+}
+
+.dark .brand-scope {
+  --primary: var(--brand-primary-dark, 217.2 91.2% 59.8%);
+  --primary-foreground: var(--brand-primary-dark-fg, 222.2 47.4% 11.2%);
+  --ring: var(--brand-primary-dark, 224.3 76.3% 48%);
+  --secondary: var(--brand-secondary-dark, 217.2 32.6% 17.5%);
+  --secondary-foreground: var(--brand-secondary-dark-fg, 210 40% 98%);
 }

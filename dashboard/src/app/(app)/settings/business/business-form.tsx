@@ -48,9 +48,10 @@ export function BusinessForm({ data }: { data: BusinessSettings }) {
       <Field label="Dirección" htmlFor="address">
         <Input id="address" name="address" defaultValue={data.address ?? ''} />
       </Field>
-      <Field label="Locale" htmlFor="locale" hint="ej. es-AR">
-        <Input id="locale" name="locale" defaultValue={data.locale ?? ''} />
-      </Field>
+      {/* El locale no se muestra: es un detalle técnico de formato que al
+          cliente no le dice nada. Viaja igual para no perder el valor guardado
+          en cada submit. */}
+      <input type="hidden" name="locale" value={data.locale ?? ''} />
       <SubmitButton>Guardar cambios</SubmitButton>
     </form>
   );

@@ -1,40 +1,9 @@
 import { serverFetch } from './server';
+import type { AdminMetrics, AdminOrgDetail, AdminOrgListItem, SuperAdminMe } from './admin.types';
 
-export interface AdminMetrics {
-  organizations: {
-    total: number;
-    trial: number;
-    active: number;
-    suspended: number;
-    disabled: number;
-  };
-  activeSubscriptions: number;
-  activeTrials: number;
-  totalAppointments: number;
-}
-
-export interface AdminOrgListItem {
-  id: string;
-  name: string;
-  slug: string;
-  status: string;
-  timezone: string;
-  createdAt: string;
-  subscriptionStatus: string | null;
-  planName: string | null;
-}
-
-export interface AdminOrgDetail extends AdminOrgListItem {
-  ownerEmail: string | null;
-  currentPeriodEnd: string | null;
-  trial: { status: string; endsAt: string } | null;
-  counts: { users: number; appointments: number };
-}
-
-export interface SuperAdminMe {
-  superAdminId: string;
-  email: string;
-}
+// Los tipos y el copy de presentación viven en `admin.types.ts` para que los
+// componentes cliente los puedan importar sin arrastrar `next/headers`.
+export * from './admin.types';
 
 export const getMe = () => serverFetch<SuperAdminMe>('/admin/me');
 export const getMetrics = () => serverFetch<AdminMetrics>('/admin/metrics');
@@ -52,20 +21,3 @@ export function getOrganizations(params: {
 
 export const getOrganization = (id: string) =>
   serverFetch<AdminOrgDetail>(`/admin/organizations/${id}`);
-
-/** UI labels + badge variants for organization status. */
-export const ORG_STATUS_UI: Record<string, { label: string; variant: 'success' | 'muted' | 'destructive' }> = {
-  TRIAL: { label: 'Prueba', variant: 'muted' },
-  ACTIVE: { label: 'Activa', variant: 'success' },
-  SUSPENDED: { label: 'Suspendida', variant: 'destructive' },
-  DISABLED: { label: 'Deshabilitada', variant: 'muted' },
-};
-
-export const SUBSCRIPTION_STATUS_LABEL: Record<string, string> = {
-  PENDING: 'Pendiente de pago',
-  ACTIVE: 'Activa',
-  PAST_DUE: 'Pago vencido',
-  SUSPENDED: 'Suspendida',
-  CANCELLED: 'Cancelada',
-  EXPIRED: 'Vencida',
-};

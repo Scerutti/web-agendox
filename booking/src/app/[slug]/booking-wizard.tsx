@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  OtpInput,
   buttonVariants,
   toast,
 } from '@agendox/ui';
@@ -126,22 +127,30 @@ export function BookingWizard({
     setBusy(false);
     if (r.ok) {
       setOtpSent(true);
-      toast.success('Si el email es válido, te enviamos un código.');
+      toast.success('Te enviamos un código', {
+        description: 'Si no lo ves en la bandeja de entrada, revisá la carpeta de spam.',
+      });
     } else {
       toast.error('No se pudo enviar el código');
     }
   }
 
-  async function verifyOtp() {
-    if (!code) {
-      toast.error('Ingresá el código');
+  /**
+   * `submittedCode` llega cuando el disparo viene de completar la última casilla:
+   * en ese momento el estado `code` del padre todavía no se actualizó, así que hay
+   * que usar el valor que manda el input y no el de la clausura.
+   */
+  async function verifyOtp(submittedCode?: string) {
+    const value = submittedCode ?? code;
+    if (value.length < 6) {
+      toast.error('Ingresá los 6 dígitos del código');
       return;
     }
     setBusy(true);
     const r = await fetch(`/api/portal/${slug}/otp/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code }),
+      body: JSON.stringify({ email, code: value }),
     });
     const data = await r.json().catch(() => ({}));
     setBusy(false);
@@ -330,38 +339,65 @@ export function BookingWizard({
               <Input
                 id="email"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={otpSent}
               />
             </Field>
             {!otpSent ? (
-              <Button onClick={sendOtp} disabled={busy} className="w-full">
-                {busy ? 'Enviando…' : 'Enviar código'}
-              </Button>
+              <>
+                <Button onClick={sendOtp} disabled={busy} className="w-full">
+                  {busy ? 'Enviando…' : 'Enviar código'}
+                </Button>
+                <BackButton onClick={() => setStep('select')} />
+              </>
             ) : (
               <>
-                <Field label="Código (6 dígitos)" htmlFor="code">
-                  <Input
-                    id="code"
-                    inputMode="numeric"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Código de 6 dígitos</p>
+                  <OtpInput
+                    name="code"
+                    autoFocus
+                    autoSubmit={false}
+                    disabled={busy}
+                    onChange={setCode}
+                    onComplete={verifyOtp}
                   />
-                </Field>
-                <Button onClick={verifyOtp} disabled={busy} className="w-full">
+                  {/* El código llega por email y ahí es donde se cae: si no está
+                      en la bandeja, casi siempre está en spam. Decirlo acá evita
+                      el reenvío en loop y el abandono de la reserva. */}
+                  <p className="text-xs text-muted-foreground">
+                    Te lo enviamos a <span className="font-medium">{email}</span>. Si no lo
+                    ves en unos segundos, <strong>revisá la carpeta de spam</strong> o
+                    correo no deseado.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={() => verifyOtp()}
+                  disabled={busy || code.length < 6}
+                  className="w-full"
+                >
                   {busy ? 'Verificando…' : 'Verificar'}
                 </Button>
-                <button
-                  type="button"
-                  className="text-xs text-muted-foreground hover:underline"
-                  onClick={sendOtp}
-                >
-                  Reenviar código
-                </button>
+
+                {/* Las dos acciones secundarias van separadas y a los extremos:
+                    juntas se tocaba la equivocada, sobre todo en mobile. */}
+                <div className="flex items-center justify-between gap-4 border-t pt-4">
+                  <BackButton onClick={() => setStep('select')} />
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
+                    onClick={sendOtp}
+                    disabled={busy}
+                  >
+                    Reenviar código
+                  </button>
+                </div>
               </>
             )}
-            <BackButton onClick={() => setStep('select')} />
           </>
         )}
 

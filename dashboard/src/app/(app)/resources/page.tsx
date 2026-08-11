@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Badge, buttonVariants } from '@agendox/ui';
+import { Badge, Callout, buttonVariants } from '@agendox/ui';
 import { getResources } from '@/lib/api/resources';
 import { getUsers } from '@/lib/api/users';
 import { ResourceCreate } from './resource-create';
@@ -9,11 +9,24 @@ export default async function ResourcesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-3">
         <h1 className="text-2xl font-semibold tracking-tight">Recursos</h1>
-        <p className="text-sm text-muted-foreground">
-          Personas, canchas, salas o equipamiento reservable.
-        </p>
+        <Callout tone="info" title="Qué es un recurso">
+          <p>
+            Es <strong>quién atiende o dónde se atiende</strong>: cada persona, cancha,
+            sala, box o equipo que se puede ocupar en un horario. Un recurso solo puede
+            tomar un turno a la vez, y por eso es lo que define cuántos turnos podés dar
+            en paralelo.
+          </p>
+          <p className="mt-1.5">
+            Si tenés dos peluqueros, son dos recursos: se pueden reservar dos turnos a la
+            misma hora. Si tenés uno solo, un turno por horario.{' '}
+            <Link href="/services" className="font-medium text-primary hover:underline">
+              Servicios
+            </Link>{' '}
+            es otra cosa: es <em>qué</em> se hace en ese turno.
+          </p>
+        </Callout>
       </div>
 
       <ResourceCreate users={users} />

@@ -9,7 +9,9 @@ import {
 import { isExpired } from '@/lib/auth/jwt';
 import { apiUrl } from '@/lib/env';
 
-const PUBLIC_PATHS = ['/login', '/register'];
+// Solo el login. El alta de negocios la hace el super admin desde su panel, así
+// que el dashboard no tiene ninguna ruta pública de registro.
+const PUBLIC_PATHS = ['/login'];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some(

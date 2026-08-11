@@ -13,9 +13,16 @@ export default async function OrganizationsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Organizaciones</h1>
-        <p className="text-sm text-muted-foreground">Todas las cuentas de la plataforma.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Organizaciones</h1>
+          <p className="text-sm text-muted-foreground">
+            Todas las cuentas de la plataforma. El alta de negocios se hace desde acá.
+          </p>
+        </div>
+        <Link href="/organizations/new" className={buttonVariants({ size: 'sm' })}>
+          Nuevo negocio
+        </Link>
       </div>
 
       <OrgFilters status={status} q={q} />

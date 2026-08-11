@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { ThemeToggle } from '@agendox/ui';
 import { ApiError } from '@/lib/api/server';
 import { getMe } from '@/lib/api/admin';
 import { LogoutButton } from '@/components/logout-button';
@@ -32,6 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </nav>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <span className="hidden text-sm text-muted-foreground sm:inline">{email}</span>
           <LogoutButton />
         </div>

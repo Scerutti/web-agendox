@@ -1,0 +1,92 @@
+/**
+ * Tipos y metadatos de presentación del panel de plataforma.
+ *
+ * Vive separado de `admin.ts` a propósito: ese módulo importa `next/headers` para
+ * leer la cookie de sesión, así que solo puede correr del lado del servidor. Los
+ * componentes cliente importan desde acá.
+ */
+
+export interface AdminMetrics {
+  organizations: {
+    total: number;
+    trial: number;
+    active: number;
+    suspended: number;
+    disabled: number;
+  };
+  activeSubscriptions: number;
+  activeTrials: number;
+  totalAppointments: number;
+}
+
+export interface AdminOrgListItem {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  timezone: string;
+  createdAt: string;
+  subscriptionStatus: string | null;
+  planName: string | null;
+}
+
+/**
+ * Funcionalidades que la plataforma habilita por organización. Sirven para
+ * apagar lo que todavía no está implementado (WhatsApp) o lo que depende de
+ * infraestructura que falta (subida de archivos).
+ */
+export interface OrganizationFeatures {
+  whatsappNotifications: boolean;
+  logoUpload: boolean;
+}
+
+export interface AdminOrgDetail extends AdminOrgListItem {
+  ownerEmail: string | null;
+  currentPeriodEnd: string | null;
+  trial: { status: string; endsAt: string } | null;
+  counts: { users: number; appointments: number };
+  features: OrganizationFeatures;
+}
+
+export interface SuperAdminMe {
+  superAdminId: string;
+  email: string;
+}
+
+/** Metadatos de cada flag, para que el panel no repita el copy. */
+export const FEATURE_UI: {
+  key: keyof OrganizationFeatures;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    key: 'whatsappNotifications',
+    label: 'Notificaciones por WhatsApp',
+    hint: 'La integración todavía no está implementada. Dejalo apagado salvo que estés probando.',
+  },
+  {
+    key: 'logoUpload',
+    label: 'Subida de logo como archivo',
+    hint: 'Requiere almacenamiento de imágenes. Con el flag apagado, el negocio igual puede usar un logo por URL.',
+  },
+];
+
+/** UI labels + badge variants for organization status. */
+export const ORG_STATUS_UI: Record<
+  string,
+  { label: string; variant: 'success' | 'muted' | 'destructive' }
+> = {
+  TRIAL: { label: 'Prueba', variant: 'muted' },
+  ACTIVE: { label: 'Activa', variant: 'success' },
+  SUSPENDED: { label: 'Suspendida', variant: 'destructive' },
+  DISABLED: { label: 'Deshabilitada', variant: 'muted' },
+};
+
+export const SUBSCRIPTION_STATUS_LABEL: Record<string, string> = {
+  PENDING: 'Pendiente de pago',
+  ACTIVE: 'Activa',
+  PAST_DUE: 'Pago vencido',
+  SUSPENDED: 'Suspendida',
+  CANCELLED: 'Cancelada',
+  EXPIRED: 'Vencida',
+};

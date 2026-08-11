@@ -2,10 +2,12 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import {
+  Callout,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  ColorPicker,
   Input,
   Textarea,
 } from '@agendox/ui';
@@ -32,16 +34,29 @@ export function ResourceCreate({ users }: { users: UserView[] }) {
       <CardHeader>
         <CardTitle>Nuevo recurso</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <form ref={ref} action={action} className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="Nombre" htmlFor="name">
+            <Field
+              label="Nombre"
+              htmlFor="name"
+              hint="Como lo va a ver el cliente al elegir. Ej: “Martín”, “Cancha 1”."
+            >
               <Input id="name" name="name" required />
             </Field>
             <Field
               label="Tipo"
               htmlFor="type"
-              hint="persona, cancha, sala, box…"
+              hint="Elegí uno de la lista o escribí el tuyo."
+              info={
+                <>
+                  Es una etiqueta libre para agrupar y ordenar tus recursos —{' '}
+                  <em>persona</em>, <em>cancha</em>, <em>sala</em>, <em>box</em>,{' '}
+                  <em>equipamiento</em>. No cambia cómo funcionan los turnos: dos recursos
+                  de tipos distintos se reservan igual. Sirve para que la lista se lea
+                  cuando tenés muchos.
+                </>
+              }
             >
               <Input id="type" name="type" list="resource-types" required />
               <datalist id="resource-types">
@@ -54,10 +69,18 @@ export function ResourceCreate({ users }: { users: UserView[] }) {
             </Field>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="Color" htmlFor="color">
-              <Input id="color" name="color" type="color" defaultValue="#2563eb" />
+            <Field
+              label="Color"
+              htmlFor="color"
+              hint="Para distinguirlo de un vistazo en el calendario."
+            >
+              <ColorPicker id="color" name="color" defaultValue="#2563eb" clearable={false} />
             </Field>
-            <Field label="Usuario asignado (opcional)" htmlFor="userId">
+            <Field
+              label="Usuario asignado (opcional)"
+              htmlFor="userId"
+              info="Vinculá el recurso con la cuenta de la persona que atiende, para que vea sus propios turnos al entrar al panel. Dejalo sin asignar si el recurso no es una persona con usuario (una cancha, una sala)."
+            >
               <select id="userId" name="userId" className={selectClass} defaultValue="">
                 <option value="">Sin asignar</option>
                 {users
@@ -70,11 +93,23 @@ export function ResourceCreate({ users }: { users: UserView[] }) {
               </select>
             </Field>
           </div>
-          <Field label="Descripción" htmlFor="description">
+          <Field
+            label="Descripción"
+            htmlFor="description"
+            hint="Opcional, para uso interno."
+          >
             <Textarea id="description" name="description" />
           </Field>
           <SubmitButton>Crear recurso</SubmitButton>
         </form>
+
+        {/* Crear el recurso no alcanza para que aparezca en la página pública:
+            estos dos pasos son los que más se olvidan. */}
+        <Callout tone="tip" title="Después de crearlo faltan dos pasos">
+          Entrá a <strong>Gestionar</strong> en el recurso y definí: qué{' '}
+          <strong>servicios</strong> ofrece y su <strong>horario de atención</strong>. Sin
+          eso el recurso existe pero no se le pueden reservar turnos.
+        </Callout>
       </CardContent>
     </Card>
   );

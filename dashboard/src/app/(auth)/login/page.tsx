@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -22,11 +21,11 @@ export default function LoginPage() {
         <Suspense fallback={null}>
           <LoginForm />
         </Suspense>
-        <p className="text-sm text-muted-foreground">
-          ¿No tenés cuenta?{' '}
-          <Link className="text-primary hover:underline" href="/register">
-            Registrá tu negocio
-          </Link>
+        {/* Las cuentas las crea el super admin: no hay auto-registro. Si alguien
+            llega sin credenciales, el camino es pedirlas, no darse de alta. */}
+        <p className="text-xs text-muted-foreground">
+          Las cuentas las habilita el equipo de Agendox. Si todavía no tenés
+          acceso, escribinos y te damos de alta el negocio.
         </p>
       </CardContent>
     </Card>

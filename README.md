@@ -30,7 +30,7 @@ de cada proyecto de Vercel es el nombre de la app, sin prefijo.
 
 | App         | Rol                    | Root Directory | Login                  | Cookie                | Endpoint del backend  |
 | ----------- | ---------------------- | -------------- | ---------------------- | --------------------- | --------------------- |
-| `dashboard` | Owner / staff del negocio | `dashboard` | `/login` (“Panel del negocio”) + `/register` | `agx_at` + `agx_rt` | `/auth/login`         |
+| `dashboard` | Owner / staff del negocio | `dashboard` | `/login` (“Panel del negocio”) | `agx_at` + `agx_rt` | `/auth/login`         |
 | `admin`     | Super Admin plataforma | `admin`        | `/login` (“Acceso de super administración”) | `agx_admin_at` | `/admin/auth/login`   |
 | `booking`   | Cliente final (OTP)    | `booking`      | `/[slug]/portal`       | `agx_cust_<slug>`     | `/public/:slug/otp/*` |
 
@@ -45,8 +45,9 @@ Cada proyecto queda en su propio dominio.
 
 Recordá que el Super Admin no se registra por la UI: se bootstrapea en el
 backend con `pnpm db:seed:superadmin` (`SUPERADMIN_EMAIL` +
-`SUPERADMIN_PASSWORD`). Los owners sí se crean solos desde `/register` del
-dashboard.
+`SUPERADMIN_PASSWORD`). **Los negocios tampoco se auto-registran**: el alta la
+hace el super admin desde `admin` → *Organizaciones* → *Nuevo negocio*, que crea
+la organización, su dueño y el trial. El dashboard no tiene ruta de registro.
 
 ### Patrón BFF (importante)
 

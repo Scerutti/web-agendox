@@ -8,6 +8,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  ColorPicker,
   Input,
   Textarea,
 } from '@agendox/ui';
@@ -94,15 +95,23 @@ function BasicInfo({
             <Field label="Nombre" htmlFor="name">
               <Input id="name" name="name" defaultValue={resource.name} required />
             </Field>
-            <Field label="Tipo" htmlFor="type">
+            <Field
+              label="Tipo"
+              htmlFor="type"
+              info="Etiqueta libre para agrupar tus recursos (persona, cancha, sala, box, equipamiento). No cambia cómo funcionan los turnos."
+            >
               <Input id="type" name="type" defaultValue={resource.type} required />
             </Field>
-            <Field label="Color" htmlFor="color">
-              <Input
+            <Field
+              label="Color"
+              htmlFor="color"
+              hint="Para distinguirlo en el calendario."
+            >
+              <ColorPicker
                 id="color"
                 name="color"
-                type="color"
                 defaultValue={resource.color ?? '#2563eb'}
+                clearable={false}
               />
             </Field>
             <Field label="Usuario asignado" htmlFor="userId">

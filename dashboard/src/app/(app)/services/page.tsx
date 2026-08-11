@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Badge, buttonVariants } from '@agendox/ui';
+import { Badge, Callout, buttonVariants } from '@agendox/ui';
 import { getServices } from '@/lib/api/services';
 import { ServiceCreate } from './service-create';
 
@@ -8,11 +8,32 @@ export default async function ServicesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-3">
         <h1 className="text-2xl font-semibold tracking-tight">Servicios</h1>
-        <p className="text-sm text-muted-foreground">
-          Servicios y sus opciones (duración y precio).
-        </p>
+        <Callout tone="info" title="Qué es un servicio y en qué se diferencia de un recurso">
+          <p>
+            El servicio es <strong>qué se hace</strong> en el turno: “Corte de pelo”,
+            “Alquiler de cancha”, “Consulta”. Cada uno tiene sus{' '}
+            <strong>opciones</strong>, y cada opción define la duración y el precio (“Corte
+            simple, 30 min” y “Corte + barba, 45 min”).
+          </p>
+          <p className="mt-1.5">
+            El{' '}
+            <Link href="/resources" className="font-medium text-primary hover:underline">
+              recurso
+            </Link>{' '}
+            es <strong>quién lo hace o dónde</strong>. El servicio dice cuánto dura y
+            cuánto cuesta; el recurso dice si hay lugar a esa hora.
+          </p>
+          <p className="mt-1.5">
+            <strong>Cómo se conectan:</strong> creá el servicio acá y después, en{' '}
+            <Link href="/resources" className="font-medium text-primary hover:underline">
+              Recursos
+            </Link>{' '}
+            → <em>Gestionar</em> → <em>Servicios que ofrece</em>, marcá qué recursos lo
+            hacen. Un servicio sin ningún recurso asignado no se puede reservar.
+          </p>
+        </Callout>
       </div>
 
       <ServiceCreate />

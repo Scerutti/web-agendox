@@ -1,4 +1,5 @@
 export * from './lib/utils';
+export * from './lib/brand-theme';
 export * from './components/button';
 export * from './components/input';
 export * from './components/label';
@@ -9,3 +10,10 @@ export * from './components/dialog';
 export * from './components/sheet';
 export * from './components/notification-bell';
 export * from './components/toaster';
+export * from './components/callout';
+export * from './components/color-picker';
+export * from './components/info-hint';
+export * from './components/otp-input';
+export * from './components/theme-provider';
+export * from './components/theme-script';
+export * from './components/theme-toggle';

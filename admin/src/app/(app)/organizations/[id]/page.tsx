@@ -9,6 +9,8 @@ import {
   type AdminOrgDetail,
 } from '@/lib/api/admin';
 import { OrgActions } from './org-actions';
+import { OrgFeaturesForm } from './org-features-form';
+import { OrgProfileForm } from './org-profile-form';
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -92,15 +94,39 @@ export default async function OrganizationDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Acciones</CardTitle>
+          <CardTitle>Editar datos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OrgProfileForm id={org.id} name={org.name} timezone={org.timezone} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Funcionalidades habilitadas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Definen qué ve habilitado el negocio en su panel. Los cambios se guardan al
+            instante.
+          </p>
+          <OrgFeaturesForm id={org.id} features={org.features} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Estado de la cuenta</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
             {org.status === 'SUSPENDED'
               ? 'La organización está suspendida y no puede operar. Reactivala para restaurar el acceso.'
-              : 'Suspender bloquea la operación del negocio (staff y reservas públicas) hasta reactivarla.'}
+              : org.status === 'DISABLED'
+                ? 'La organización está dada de baja. Los datos siguen guardados; reactivarla restaura el acceso.'
+                : 'Suspender bloquea la operación del negocio (staff y reservas públicas) de forma temporal. Dar de baja lo cierra, conservando los datos.'}
           </p>
-          <OrgActions id={org.id} status={org.status} />
+          <OrgActions id={org.id} name={org.name} status={org.status} />
         </CardContent>
       </Card>
     </div>

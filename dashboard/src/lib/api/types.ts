@@ -10,6 +10,16 @@ export interface Session {
   email: string;
 }
 
+/**
+ * Funcionalidades que la plataforma habilita para este negocio. Las gobierna el
+ * super admin; el panel las usa para decidir qué mostrar habilitado y qué
+ * mostrar apagado con su explicación.
+ */
+export interface OrganizationFeatures {
+  whatsappNotifications: boolean;
+  logoUpload: boolean;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -17,6 +27,7 @@ export interface Organization {
   status: string;
   timezone: string;
   createdAt: string;
+  features: OrganizationFeatures;
 }
 
 export interface SubscriptionInfo {

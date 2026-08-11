@@ -1,4 +1,5 @@
 import type { Role } from '@agendox/domain';
+import { ThemeToggle } from '@agendox/ui';
 import { LogoutButton } from './logout-button';
 import { DashboardNotifications } from './dashboard-notifications';
 import { MobileNav } from './mobile-nav';
@@ -19,6 +20,7 @@ export function Topbar({
         <span className="truncate font-semibold">{orgName}</span>
       </div>
       <div className="flex shrink-0 items-center gap-2">
+        <ThemeToggle />
         <DashboardNotifications />
         <span className="hidden text-sm text-muted-foreground sm:inline">
           {email}

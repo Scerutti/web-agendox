@@ -3,6 +3,7 @@ import type {
   AdminMetrics,
   AdminOrgDetail,
   AdminOrgListItem,
+  AdminOrgUser,
   PlanView,
   SuperAdminMe,
 } from './admin.types';
@@ -30,3 +31,7 @@ export const getOrganization = (id: string) =>
 
 /** Planes activos, para elegir uno al dar de alta un negocio ya suscripto. */
 export const getPlans = () => serverFetch<PlanView[]>('/admin/plans');
+
+/** Staff del negocio. El alta de recepcionistas se hace desde acá, no desde el panel del negocio. */
+export const getOrganizationUsers = (id: string) =>
+  serverFetch<AdminOrgUser[]>(`/admin/organizations/${id}/users`);

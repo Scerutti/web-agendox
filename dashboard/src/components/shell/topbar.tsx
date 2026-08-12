@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Role } from '@agendox/domain';
 import { ThemeToggle } from '@agendox/ui';
 import type { OrganizationFeatures } from '@/lib/api/types';
@@ -25,9 +26,19 @@ export function Topbar({
       <div className="flex shrink-0 items-center gap-2">
         <ThemeToggle />
         <DashboardNotifications />
-        <span className="hidden text-sm text-muted-foreground sm:inline">
-          {email}
-        </span>
+        {/* El email es el acceso a la cuenta: es donde el usuario ya mira para
+            saber con quién está entrado. En mobile queda el ícono. */}
+        <Link
+          href="/account"
+          className="rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          title="Mi cuenta"
+        >
+          <span className="hidden sm:inline">{email}</span>
+          <span className="sm:hidden" aria-hidden>
+            ⚙
+          </span>
+          <span className="sr-only sm:hidden">Mi cuenta</span>
+        </Link>
         <LogoutButton />
       </div>
     </header>

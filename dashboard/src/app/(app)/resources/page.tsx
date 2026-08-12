@@ -2,9 +2,17 @@ import Link from 'next/link';
 import { Badge, Callout, buttonVariants } from '@agendox/ui';
 import { getResources } from '@/lib/api/resources';
 import { getUsers } from '@/lib/api/users';
+import { sessionHasRole } from '@/lib/api/session';
+import { NoAccess } from '@/components/no-access';
 import { ResourceCreate } from './resource-create';
 
 export default async function ResourcesPage() {
+  // `getUsers()` es Owner/Admin: sin este corte, un rol operativo que entre por
+  // URL recibe un 403 sin manejar y ve la pantalla de error.
+  if (!(await sessionHasRole('OWNER', 'ADMIN'))) {
+    return <NoAccess resource="los recursos" />;
+  }
+
   const [resources, users] = await Promise.all([getResources(), getUsers()]);
 
   return (

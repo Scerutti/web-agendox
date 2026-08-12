@@ -10,6 +10,9 @@ export interface UserView {
   email: string;
   role: Role;
   status: 'ACTIVE' | 'INACTIVE';
+  /** `null` mientras no haya iniciado sesión por primera vez. */
+  lastLoginAt: string | null;
+  createdAt: string;
 }
 
 /** "Nombre Apellido" para mostrar, con fallback al email. */

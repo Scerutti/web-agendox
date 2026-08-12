@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { ApiError } from '@agendox/api-client';
+import type { Role } from '@agendox/domain';
 import { serverFetch } from './server';
 import { AT } from '../auth/cookies';
 import { DEFAULT_FEATURES } from './types';
@@ -20,6 +21,19 @@ export async function getSession(): Promise<Session | null> {
     if (err instanceof ApiError && err.isUnauthorized) return null;
     throw err;
   }
+}
+
+/**
+ * `true` si la sesión actual tiene alguno de los roles pedidos.
+ *
+ * Sirve para que una página cuyo link está oculto en el menú muestre un cartel
+ * en vez de romperse cuando alguien llega por URL. **No es el control de
+ * acceso**: ese lo hace el backend con `@Roles`. Acá solo se evita la pantalla
+ * de error.
+ */
+export async function sessionHasRole(...roles: Role[]): Promise<boolean> {
+  const session = await getSession();
+  return !!session && roles.includes(session.role);
 }
 
 /** Organización actual (GET /organizations/current). */

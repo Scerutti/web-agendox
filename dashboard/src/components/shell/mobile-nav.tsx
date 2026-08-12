@@ -18,7 +18,7 @@ export function MobileNav({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const items = navFor(features);
+  const items = navFor(features, role);
 
   // Close the drawer whenever navigation completes.
   useEffect(() => {

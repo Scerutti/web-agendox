@@ -16,7 +16,7 @@ export function Sidebar({
   features: OrganizationFeatures;
 }) {
   const pathname = usePathname();
-  const items = navFor(features);
+  const items = navFor(features, role);
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r bg-card px-3 py-4 md:flex">

@@ -151,6 +151,90 @@ export async function updateFeatures(
   }
 }
 
+/**
+ * Resultado de una acción que genera una contraseña temporal. Se devuelve una
+ * sola vez: el backend guarda solo el hash, así que si se pierde hay que
+ * resetearla de nuevo.
+ */
+export interface UserActionResult extends ActionResult {
+  temporaryPassword?: string;
+  email?: string;
+}
+
+/**
+ * Alta de recepcionista. El rol no viaja: lo fija el backend, que por esta vía
+ * solo crea `RECEPTIONIST`.
+ */
+export async function createOrganizationUser(
+  id: string,
+  _prev: UserActionResult,
+  formData: FormData,
+): Promise<UserActionResult> {
+  const email = str(formData, 'email');
+  try {
+    const created = await serverFetch<{
+      user: { email: string };
+      temporaryPassword: string;
+    }>(`/admin/organizations/${id}/users`, {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        firstName: str(formData, 'firstName'),
+        lastName: str(formData, 'lastName'),
+      }),
+    });
+    revalidateOrg(id);
+    return {
+      ok: true,
+      message: 'Recepcionista creado',
+      temporaryPassword: created.temporaryPassword,
+      email: created.user.email,
+    };
+  } catch (e) {
+    return failure(e, 'No se pudo crear el recepcionista');
+  }
+}
+
+export async function setOrganizationUserStatus(
+  id: string,
+  userId: string,
+  status: 'ACTIVE' | 'INACTIVE',
+): Promise<ActionResult> {
+  try {
+    await serverFetch(`/admin/organizations/${id}/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+    revalidateOrg(id);
+    return {
+      ok: true,
+      message: status === 'ACTIVE' ? 'Usuario reactivado' : 'Usuario desactivado',
+    };
+  } catch (e) {
+    return failure(e, 'No se pudo actualizar el usuario');
+  }
+}
+
+export async function resetOrganizationUserPassword(
+  id: string,
+  userId: string,
+): Promise<UserActionResult> {
+  try {
+    const result = await serverFetch<{ temporaryPassword: string }>(
+      `/admin/organizations/${id}/users/${userId}/reset-password`,
+      { method: 'POST' },
+    );
+    revalidateOrg(id);
+    return {
+      ok: true,
+      message: 'Contraseña restablecida',
+      temporaryPassword: result.temporaryPassword,
+    };
+  } catch (e) {
+    return failure(e, 'No se pudo restablecer la contraseña');
+  }
+}
+
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
 }

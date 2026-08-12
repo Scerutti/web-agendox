@@ -4,13 +4,16 @@ import { Badge, Card, CardContent, CardHeader, CardTitle, buttonVariants } from 
 import { ApiError } from '@/lib/api/server';
 import {
   getOrganization,
+  getOrganizationUsers,
   ORG_STATUS_UI,
   SUBSCRIPTION_STATUS_LABEL,
   type AdminOrgDetail,
+  type AdminOrgUser,
 } from '@/lib/api/admin';
 import { OrgActions } from './org-actions';
 import { OrgFeaturesForm } from './org-features-form';
 import { OrgProfileForm } from './org-profile-form';
+import { OrgUsers } from './org-users';
 import { OwnerEmailForm } from './owner-email-form';
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -34,6 +37,14 @@ export default async function OrganizationDetailPage({
   } catch (e) {
     if (e instanceof ApiError && e.isNotFound) notFound();
     throw e;
+  }
+
+  // El staff no rompe la ficha si falla: la organización se sigue viendo.
+  let users: AdminOrgUser[] = [];
+  try {
+    users = await getOrganizationUsers(id);
+  } catch {
+    users = [];
   }
 
   const ui = ORG_STATUS_UI[org.status] ?? { label: org.status, variant: 'muted' as const };
@@ -145,6 +156,15 @@ export default async function OrganizationDetailPage({
         </CardHeader>
         <CardContent>
           <OwnerEmailForm id={org.id} ownerEmail={org.ownerEmail} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Equipo del negocio</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OrgUsers id={org.id} users={users} />
         </CardContent>
       </Card>
 

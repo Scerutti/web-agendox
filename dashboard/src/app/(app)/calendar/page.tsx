@@ -1,10 +1,23 @@
 import { zonedDayKey } from '@agendox/domain';
+import type { AppointmentStatus } from '@agendox/domain';
 import { getAppointments } from '@/lib/api/appointments';
 import { getResources } from '@/lib/api/resources';
 import { getServices } from '@/lib/api/services';
 import { getCurrentOrganization } from '@/lib/api/session';
+import { APPOINTMENT_STATUS_UI } from '@/lib/appointment-ui';
 import { addDays, weekDays } from './date-utils';
 import { CalendarView } from './calendar-view';
+
+/**
+ * Un `?status=` inventado a mano en la URL haría que el backend responda 400 y
+ * la página entera falle, así que se valida contra los estados conocidos y lo
+ * que no encaja se descarta como "sin filtro".
+ */
+function parseStatus(value: unknown): AppointmentStatus | undefined {
+  return typeof value === 'string' && value in APPOINTMENT_STATUS_UI
+    ? (value as AppointmentStatus)
+    : undefined;
+}
 
 export default async function CalendarPage({
   searchParams,
@@ -20,6 +33,7 @@ export default async function CalendarPage({
   const date = typeof sp.date === 'string' ? sp.date : today;
   const resourceId =
     typeof sp.resourceId === 'string' && sp.resourceId ? sp.resourceId : undefined;
+  const status = parseStatus(sp.status);
 
   const days = view === 'week' ? weekDays(date) : [date];
   // Ventana UTC con padding para cubrir los días locales sin importar el offset.
@@ -27,7 +41,7 @@ export default async function CalendarPage({
   const to = `${addDays(days[days.length - 1]!, 2)}T00:00:00.000Z`;
 
   const [appointments, resources, services] = await Promise.all([
-    getAppointments({ from, to, resourceId }),
+    getAppointments({ from, to, resourceId, status }),
     getResources(),
     getServices(),
   ]);
@@ -48,6 +62,7 @@ export default async function CalendarPage({
         view={view}
         date={date}
         resourceId={resourceId}
+        status={status}
         todayKey={today}
       />
     </div>

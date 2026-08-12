@@ -7,7 +7,8 @@ import {
 } from '@/lib/api/resources';
 import { getServices } from '@/lib/api/services';
 import { getUsers } from '@/lib/api/users';
-import { getCurrentOrganization } from '@/lib/api/session';
+import { getCurrentOrganization, sessionHasRole } from '@/lib/api/session';
+import { NoAccess } from '@/components/no-access';
 import { ResourceDetail } from './resource-detail';
 
 export default async function ResourceDetailPage({
@@ -16,6 +17,11 @@ export default async function ResourceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  // Igual que el listado: `getUsers()` es Owner/Admin y rompería la página.
+  if (!(await sessionHasRole('OWNER', 'ADMIN'))) {
+    return <NoAccess resource="los recursos" />;
+  }
+
   const resource = await getResource(id);
   if (!resource) notFound();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Badge,
@@ -31,6 +31,21 @@ type Step = 'select' | 'auth' | 'profile' | 'confirm' | 'done';
 const selectClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
+/**
+ * Espera antes de habilitar cada reenvío, en segundos. Espeja la escala del
+ * backend (`RESEND_DELAYS_SECONDS` en request-customer-otp.use-case.ts), que es
+ * quien realmente decide: acá es solo para mostrar la cuenta regresiva sin
+ * tener que pedir permiso al servidor y comerse un error.
+ */
+const RESEND_DELAYS_SECONDS = [30, 60, 90, 120, 150];
+const MAX_RESENDS = RESEND_DELAYS_SECONDS.length;
+
+function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 export function BookingWizard({
   slug,
   timezone,
@@ -59,6 +74,12 @@ export function BookingWizard({
   const [email, setEmail] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [code, setCode] = useState('');
+  /** Envíos hechos para el email actual (el inicial cuenta como 0 reenvíos). */
+  const [resendCount, setResendCount] = useState(0);
+  /** Momento (epoch ms) a partir del cual se puede volver a pedir un código. */
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [resendBlocked, setResendBlocked] = useState(false);
 
   // Profile
   const [profile, setProfile] = useState({
@@ -113,6 +134,34 @@ export function BookingWizard({
     setSlots(res.result.slots);
   }
 
+  // Cuenta regresiva del reenvío. Solo vive mientras hay espera pendiente: no
+  // deja un intervalo corriendo durante el resto de la reserva.
+  useEffect(() => {
+    if (!cooldownUntil) return;
+    function tick() {
+      const left = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      setSecondsLeft(left > 0 ? left : 0);
+      if (left <= 0) setCooldownUntil(0);
+    }
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [cooldownUntil]);
+
+  /**
+   * Devuelve el paso de identificación a cero. Sin esto, quien se equivoca de
+   * email queda encerrado: el input se deshabilita al enviar y el contador
+   * seguiría corriendo contra una dirección que no es la suya.
+   */
+  function resetOtpFlow() {
+    setOtpSent(false);
+    setCode('');
+    setResendCount(0);
+    setCooldownUntil(0);
+    setSecondsLeft(0);
+    setResendBlocked(false);
+  }
+
   async function sendOtp() {
     if (!email) {
       toast.error('Ingresá tu email');
@@ -124,15 +173,37 @@ export function BookingWizard({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
+    const data = await r.json().catch(() => ({}));
     setBusy(false);
-    if (r.ok) {
+
+    // El servidor es el que manda. Si corta con 429 se adopta su espera: eso es
+    // lo que cubre al que recarga la página para saltear el contador local.
+    if (r.status === 429) {
+      const retry =
+        Number(data?.details?.retryAfterSeconds) || RESEND_DELAYS_SECONDS[0]!;
       setOtpSent(true);
-      toast.success('Te enviamos un código', {
-        description: 'Si no lo ves en la bandeja de entrada, revisá la carpeta de spam.',
-      });
-    } else {
-      toast.error('No se pudo enviar el código');
+      setCooldownUntil(Date.now() + retry * 1000);
+      if (resendCount >= MAX_RESENDS) setResendBlocked(true);
+      toast.error(data.message || 'Esperá unos segundos antes de pedir otro código');
+      return;
     }
+
+    if (!r.ok) {
+      toast.error('No se pudo enviar el código');
+      return;
+    }
+
+    // El envío inicial no cuenta como reenvío, pero sí arranca la espera: si no,
+    // el botón queda disponible al instante y se puede golpear en loop.
+    const nextCount = otpSent ? resendCount + 1 : resendCount;
+    const wait = RESEND_DELAYS_SECONDS[nextCount] ?? RESEND_DELAYS_SECONDS.at(-1)!;
+    setResendCount(nextCount);
+    setOtpSent(true);
+    setCooldownUntil(Date.now() + wait * 1000);
+    if (nextCount >= MAX_RESENDS) setResendBlocked(true);
+    toast.success('Te enviamos un código', {
+      description: 'Si no lo ves en la bandeja de entrada, revisá la carpeta de spam.',
+    });
   }
 
   /**
@@ -373,6 +444,13 @@ export function BookingWizard({
                     ves en unos segundos, <strong>revisá la carpeta de spam</strong> o
                     correo no deseado.
                   </p>
+                  <button
+                    type="button"
+                    onClick={resetOtpFlow}
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    Usar otro email
+                  </button>
                 </div>
 
                 <Button
@@ -389,13 +467,24 @@ export function BookingWizard({
                   <BackButton onClick={() => setStep('select')} />
                   <button
                     type="button"
-                    className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
+                    className="text-xs font-medium text-primary hover:underline disabled:no-underline disabled:opacity-50"
                     onClick={sendOtp}
-                    disabled={busy}
+                    disabled={busy || resendBlocked || secondsLeft > 0}
                   >
-                    Reenviar código
+                    {resendBlocked
+                      ? 'Límite alcanzado'
+                      : secondsLeft > 0
+                        ? `Reenviar en ${formatCountdown(secondsLeft)}`
+                        : 'Reenviar código'}
                   </button>
                 </div>
+
+                {resendBlocked ? (
+                  <p className="text-xs text-destructive">
+                    Alcanzaste el límite de reenvíos. Esperá unos minutos y volvé a
+                    intentar, o comunicate con el negocio para reservar por otra vía.
+                  </p>
+                ) : null}
               </>
             )}
           </>

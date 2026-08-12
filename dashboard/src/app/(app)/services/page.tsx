@@ -1,9 +1,18 @@
 import Link from 'next/link';
 import { Badge, Callout, buttonVariants } from '@agendox/ui';
 import { getServices } from '@/lib/api/services';
+import { sessionHasRole } from '@/lib/api/session';
+import { NoAccess } from '@/components/no-access';
 import { ServiceCreate } from './service-create';
 
 export default async function ServicesPage() {
+  // El catálogo se lee con cualquier rol, pero administrarlo es Owner/Admin: sin
+  // este corte un rol operativo vería una pantalla entera de acciones que le van
+  // a dar 403.
+  if (!(await sessionHasRole('OWNER', 'ADMIN'))) {
+    return <NoAccess resource="los servicios" />;
+  }
+
   const services = await getServices();
 
   return (

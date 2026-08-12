@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { X } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function Dialog({
@@ -33,11 +34,34 @@ export function Dialog({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-lg border bg-card p-6 shadow-lg"
+        className="relative z-10 flex max-h-[85vh] w-full max-w-md flex-col rounded-lg border bg-card shadow-lg"
       >
-        {children}
+        <CloseButton onClick={() => onOpenChange(false)} />
+        {/*
+          El scroll vive en el contenido, no en el panel. Si scrolleara el panel,
+          la X —que está posicionada sobre él— se iría de pantalla apenas el
+          usuario bajara en un modal largo, que es justo cuando más se necesita.
+        */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">{children}</div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Cierre explícito del modal. El clic afuera y Escape ya cerraban, pero son
+ * gestos que no se ven: sin un control visible, el usuario no sabe que existen.
+ */
+function CloseButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Cerrar"
+      className="absolute right-2 top-2 z-10 flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <X className="h-4 w-4" aria-hidden />
+    </button>
   );
 }
 
@@ -45,7 +69,9 @@ export function DialogHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('mb-4 space-y-1', className)} {...props} />;
+  // `pr-12` reserva el ancho del botón de cierre para que el título no quede
+  // debajo de la X.
+  return <div className={cn('mb-4 space-y-1 pr-12', className)} {...props} />;
 }
 
 export function DialogTitle({

@@ -80,6 +80,25 @@ export interface SuperAdminMe {
   email: string;
 }
 
+/** Usuario interno de una organización (staff del negocio). */
+export interface AdminOrgUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: 'OWNER' | 'ADMIN' | 'RECEPTIONIST' | 'RESOURCE_OPERATOR';
+  status: 'ACTIVE' | 'INACTIVE';
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+export const USER_ROLE_LABEL: Record<AdminOrgUser['role'], string> = {
+  OWNER: 'Propietario',
+  ADMIN: 'Administrador',
+  RECEPTIONIST: 'Recepcionista',
+  RESOURCE_OPERATOR: 'Operador de recurso',
+};
+
 /** Metadatos de cada flag, para que el panel no repita el copy. */
 export const FEATURE_UI: {
   key: keyof OrganizationFeatures;

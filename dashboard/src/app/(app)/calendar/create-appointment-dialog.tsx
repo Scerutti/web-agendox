@@ -219,7 +219,7 @@ export function CreateAppointmentDialog({
               <option value="">Opción…</option>
               {options.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.durationMinutes} min
+                  {o.name} · {o.durationMinutes} min
                 </option>
               ))}
             </select>

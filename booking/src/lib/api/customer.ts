@@ -52,6 +52,8 @@ export interface TransferInfo {
 export interface CustomerAppointmentView {
   id: string;
   serviceName: string;
+  /** Nombre de la opción tal como estaba al reservar (snapshot del turno). */
+  serviceOptionName: string;
   resourceName: string;
   startsAt: string;
   endsAt: string;

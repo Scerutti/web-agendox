@@ -30,6 +30,8 @@ export interface PublicOrg {
 
 export interface PublicServiceOption {
   id: string;
+  /** Qué es la opción. Es lo que el cliente lee para elegir. */
+  name: string;
   durationMinutes: number;
   price: number;
 }

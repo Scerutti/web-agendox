@@ -39,7 +39,47 @@ export default async function TeamPage() {
               <CardTitle>Usuarios</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              {/*
+                Mobile lee la lista como tarjetas y desde `sm` como tabla. Cuatro
+                columnas no entran en un teléfono, y el `overflow-x-auto` no
+                arreglaba nada: solo escondía el desborde detrás de un scroll
+                lateral que nadie descubre.
+              */}
+              <div className="space-y-3 sm:hidden">
+                {users.map((user) => (
+                  <div key={user.id} className="space-y-2 rounded-lg border p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium">
+                          {user.firstName} {user.lastName}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                      <Badge variant={user.status === 'ACTIVE' ? 'success' : 'muted'}>
+                        {user.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </div>
+                    <dl className="grid grid-cols-2 gap-2 border-t pt-2 text-xs">
+                      <div>
+                        <dt className="text-muted-foreground">Rol</dt>
+                        <dd>{ROLE_LABEL[user.role] ?? user.role}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Último ingreso</dt>
+                        <dd>
+                          {user.lastLoginAt
+                            ? new Date(user.lastLoginAt).toLocaleDateString('es-AR')
+                            : 'Nunca'}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto sm:block">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">

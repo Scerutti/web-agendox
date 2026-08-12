@@ -318,7 +318,7 @@ export function BookingWizard({
                   <option value="">Opción…</option>
                   {options.map((o) => (
                     <option key={o.id} value={o.id}>
-                      {o.durationMinutes} min · {formatMoney(o.price)}
+                      {o.name} — {o.durationMinutes} min · {formatMoney(o.price)}
                     </option>
                   ))}
                 </select>
@@ -548,7 +548,9 @@ export function BookingWizard({
               </p>
               <p>
                 <span className="text-muted-foreground">Opción: </span>
-                {option ? `${option.durationMinutes} min · ${formatMoney(option.price)}` : '—'}
+                {option
+                  ? `${option.name} — ${option.durationMinutes} min · ${formatMoney(option.price)}`
+                  : '—'}
               </p>
               <p>
                 <span className="text-muted-foreground">Cuándo: </span>

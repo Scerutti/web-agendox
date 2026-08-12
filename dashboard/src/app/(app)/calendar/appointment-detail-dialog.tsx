@@ -72,6 +72,13 @@ export function AppointmentDetailDialog({
       </DialogHeader>
 
       <div className="space-y-2 text-sm">
+        {/* El nombre de la opción sale del snapshot del turno, no del catálogo:
+            si el negocio la renombró después, acá se sigue viendo lo que el
+            cliente contrató. */}
+        <p>
+          <span className="text-muted-foreground">Opción: </span>
+          {appointment.serviceOptionName} · {appointment.durationMinutes} min
+        </p>
         <p>
           <span className="text-muted-foreground">Cuándo: </span>
           {formatInOrgTz(appointment.startsAt, timezone)} –{' '}

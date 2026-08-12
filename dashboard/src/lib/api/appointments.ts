@@ -6,6 +6,8 @@ export interface AppointmentView {
   serviceId: string;
   serviceName: string;
   serviceOptionId: string;
+  /** Nombre de la opción al momento de reservar (snapshot, no se re-lee). */
+  serviceOptionName: string;
   durationMinutes: number;
   servicePrice: number;
   resourceId: string;

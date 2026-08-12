@@ -38,6 +38,10 @@ export default async function PortalAppointmentPage({
 
       <div className="space-y-1 rounded-lg border p-4 text-sm">
         <p>
+          <span className="text-muted-foreground">Opción: </span>
+          {appointment.serviceOptionName}
+        </p>
+        <p>
           <span className="text-muted-foreground">Cuándo: </span>
           {formatInOrgTz(appointment.startsAt, org.timezone)}
         </p>

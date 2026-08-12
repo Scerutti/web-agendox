@@ -10,6 +10,8 @@ export interface ServiceView {
 export interface ServiceOptionView {
   id: string;
   serviceId: string;
+  /** Qué es la opción ("Corte simple"). Obligatorio. */
+  name: string;
   durationMinutes: number;
   price: number;
   active: boolean;

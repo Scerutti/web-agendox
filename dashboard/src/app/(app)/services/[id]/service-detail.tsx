@@ -83,10 +83,50 @@ export function ServiceDetail({ service }: { service: ServiceDetailView }) {
           <CardTitle>Opciones</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="overflow-x-auto rounded-md border">
+          {/* Tarjetas en mobile: tres datos más dos acciones no entran en una
+              fila de teléfono. Desde `sm` vuelve la tabla. */}
+          <div className="space-y-3 sm:hidden">
+            {service.options.length === 0 ? (
+              <p className="rounded-md border p-4 text-center text-sm text-muted-foreground">
+                Sin opciones. Agregá al menos una.
+              </p>
+            ) : (
+              service.options.map((o) => (
+                <div key={o.id} className="space-y-3 rounded-md border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium">{o.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {o.durationMinutes} min · {formatMoney(o.price)}
+                      </p>
+                    </div>
+                    <Badge variant={o.active ? 'success' : 'muted'}>
+                      {o.active ? 'Activa' : 'Inactiva'}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2 border-t pt-3">
+                    <Button variant="ghost" size="sm" onClick={() => setEditing(o)}>
+                      Editar
+                    </Button>
+                    <form
+                      className="inline"
+                      action={setOptionActive.bind(null, service.id, o.id, !o.active)}
+                    >
+                      <Button variant="ghost" size="sm" type="submit">
+                        {o.active ? 'Desactivar' : 'Activar'}
+                      </Button>
+                    </form>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-md border sm:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
+                  <th className="p-3 font-medium">Opción</th>
                   <th className="p-3 font-medium">Duración</th>
                   <th className="p-3 font-medium">Precio</th>
                   <th className="p-3 font-medium">Estado</th>
@@ -97,7 +137,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailView }) {
                 {service.options.length === 0 && (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="p-4 text-center text-muted-foreground"
                     >
                       Sin opciones. Agregá al menos una.
@@ -108,6 +148,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailView }) {
                   const active = o.active;
                   return (
                     <tr key={o.id} className="border-b last:border-0">
+                      <td className="p-3 font-medium">{o.name}</td>
                       <td className="p-3">{o.durationMinutes} min</td>
                       <td className="p-3">{formatMoney(o.price)}</td>
                       <td className="p-3">
@@ -144,27 +185,42 @@ export function ServiceDetail({ service }: { service: ServiceDetailView }) {
             </table>
           </div>
 
-          <form ref={optFormRef} action={optAction} className="flex items-end gap-3">
+          <form ref={optFormRef} action={optAction} className="space-y-3">
             <input type="hidden" name="serviceId" defaultValue={service.id} />
-            <Field label="Duración (min)" htmlFor="durationMinutes">
+            <Field
+              label="Nombre de la opción"
+              htmlFor="optionName"
+              hint="Es lo que lee el cliente al reservar. Ej.: “Corte simple”, “Corte + barba”."
+            >
               <Input
-                id="durationMinutes"
-                name="durationMinutes"
-                type="number"
-                min={1}
+                id="optionName"
+                name="name"
+                maxLength={80}
+                placeholder="Corte simple"
                 required
               />
             </Field>
-            <Field label="Precio" htmlFor="price">
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                step="0.01"
-                min={0}
-                required
-              />
-            </Field>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Duración (min)" htmlFor="durationMinutes">
+                <Input
+                  id="durationMinutes"
+                  name="durationMinutes"
+                  type="number"
+                  min={1}
+                  required
+                />
+              </Field>
+              <Field label="Precio" htmlFor="price">
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  required
+                />
+              </Field>
+            </div>
             <SubmitButton>Agregar opción</SubmitButton>
           </form>
         </CardContent>
@@ -213,6 +269,13 @@ function EditOptionForm({
       <form action={action} className="space-y-3">
         <input type="hidden" name="serviceId" defaultValue={serviceId} />
         <input type="hidden" name="optionId" defaultValue={option.id} />
+        <Field
+          label="Nombre de la opción"
+          htmlFor="name"
+          hint="Renombrarla no cambia los turnos ya reservados."
+        >
+          <Input id="name" name="name" maxLength={80} defaultValue={option.name} required />
+        </Field>
         <Field label="Duración (min)" htmlFor="durationMinutes">
           <Input
             id="durationMinutes"

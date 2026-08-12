@@ -38,6 +38,9 @@ export function ClientsManager({
   const to = Math.min(pageNum * pageSize, total);
   const hasPrev = pageNum > 1;
   const hasNext = pageNum * pageSize < total;
+  const emptyMessage = q
+    ? 'Sin resultados para la búsqueda.'
+    : 'Sin clientes todavía.';
 
   function go(params: { q?: string; page?: number }) {
     const sp = new URLSearchParams();
@@ -65,12 +68,14 @@ export function ClientsManager({
         </CardContent>
       </Card>
 
-      <form onSubmit={onSearch} className="flex items-center gap-2">
+      {/* El input a ancho completo en mobile: con `w-72` fijo empujaba a los
+          botones fuera de la pantalla. */}
+      <form onSubmit={onSearch} className="flex flex-wrap items-center gap-2">
         <Input
           name="q"
           placeholder="Buscar por nombre, email o WhatsApp…"
           defaultValue={q}
-          className="w-72 max-w-full"
+          className="w-full sm:w-72"
         />
         <Button type="submit" variant="outline" size="sm">
           Buscar
@@ -82,7 +87,48 @@ export function ClientsManager({
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-lg border">
+      {/*
+        Dos lecturas de los mismos datos, elegidas por CSS. La tabla tiene cuatro
+        columnas y no entra en un teléfono: el `overflow-x-auto` no lo resolvía,
+        solo escondía el desborde detrás de un scroll lateral que nadie descubre.
+      */}
+      <div className="space-y-3 sm:hidden">
+        {clients.length === 0 ? (
+          <p className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+            {emptyMessage}
+          </p>
+        ) : (
+          clients.map((c) => {
+            const active = c.status === 'ACTIVE';
+            return (
+              <div key={c.id} className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      {c.firstName} {c.lastName}
+                    </p>
+                    {c.email ? (
+                      <p className="truncate text-xs text-muted-foreground">{c.email}</p>
+                    ) : null}
+                  </div>
+                  <Badge variant={active ? 'success' : 'muted'}>
+                    {active ? 'Activo' : 'Inactivo'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {c.whatsapp}
+                  {c.phone ? ` · ${c.phone}` : ''}
+                </p>
+                <div className="flex flex-wrap gap-2 border-t pt-3">
+                  <ClientActions client={c} onEdit={() => setEditing(c)} />
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border sm:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-muted-foreground">
@@ -96,7 +142,7 @@ export function ClientsManager({
             {clients.length === 0 && (
               <tr>
                 <td colSpan={4} className="p-6 text-center text-muted-foreground">
-                  {q ? 'Sin resultados para la búsqueda.' : 'Sin clientes todavía.'}
+                  {emptyMessage}
                 </td>
               </tr>
             )}
@@ -122,25 +168,7 @@ export function ClientsManager({
                     </Badge>
                   </td>
                   <td className="whitespace-nowrap p-3 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditing(c)}
-                    >
-                      Editar
-                    </Button>
-                    <form
-                      className="inline"
-                      action={setClientStatus.bind(
-                        null,
-                        c.id,
-                        active ? 'INACTIVE' : 'ACTIVE',
-                      )}
-                    >
-                      <Button variant="ghost" size="sm" type="submit">
-                        {active ? 'Desactivar' : 'Activar'}
-                      </Button>
-                    </form>
+                    <ClientActions client={c} onEdit={() => setEditing(c)} />
                   </td>
                 </tr>
               );
@@ -149,7 +177,7 @@ export function ClientsManager({
         </table>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
         <span>
           {total === 0 ? 'Sin clientes' : `${from}–${to} de ${total}`}
         </span>
@@ -194,5 +222,31 @@ export function ClientsManager({
         )}
       </Dialog>
     </div>
+  );
+}
+
+/** Acciones por cliente. Compartidas por la tarjeta de mobile y la fila de la tabla. */
+function ClientActions({
+  client,
+  onEdit,
+}: {
+  client: ClientView;
+  onEdit: () => void;
+}) {
+  const active = client.status === 'ACTIVE';
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={onEdit}>
+        Editar
+      </Button>
+      <form
+        className="inline"
+        action={setClientStatus.bind(null, client.id, active ? 'INACTIVE' : 'ACTIVE')}
+      >
+        <Button variant="ghost" size="sm" type="submit">
+          {active ? 'Desactivar' : 'Activar'}
+        </Button>
+      </form>
+    </>
   );
 }

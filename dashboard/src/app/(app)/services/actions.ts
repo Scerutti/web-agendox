@@ -63,6 +63,7 @@ export async function createOption(
     await serverFetch(`/services/${serviceId}/options`, {
       method: 'POST',
       body: JSON.stringify({
+        name: str(fd, 'name'),
         durationMinutes: num(fd, 'durationMinutes'),
         price: num(fd, 'price'),
       }),
@@ -84,6 +85,7 @@ export async function updateOption(
     await serverFetch(`/services/${serviceId}/options/${optionId}`, {
       method: 'PATCH',
       body: JSON.stringify({
+        name: str(fd, 'name'),
         durationMinutes: num(fd, 'durationMinutes'),
         price: num(fd, 'price'),
       }),

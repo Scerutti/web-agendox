@@ -88,7 +88,8 @@ function Section({
                 <Badge variant={ui.variant}>{ui.label}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                {formatInOrgTz(a.startsAt, tz)} · {a.resourceName}
+                {a.serviceOptionName} · {formatInOrgTz(a.startsAt, tz)} ·{' '}
+                {a.resourceName}
               </p>
             </Link>
           );

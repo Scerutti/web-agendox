@@ -39,7 +39,44 @@ export default async function ResourcesPage() {
 
       <ResourceCreate users={users} />
 
-      <div className="overflow-x-auto rounded-lg border">
+      {/* Mobile lee la lista como tarjetas; desde `sm` vuelve la tabla. Cuatro
+          columnas no entran en un teléfono. */}
+      <div className="space-y-3 sm:hidden">
+        {resources.length === 0 ? (
+          <p className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+            Sin recursos todavía.
+          </p>
+        ) : (
+          resources.map((r) => (
+            <div key={r.id} className="space-y-3 rounded-lg border p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="inline-block h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: r.color ?? '#94a3b8' }}
+                    aria-hidden
+                  />
+                  <span className="truncate font-medium">{r.name}</span>
+                </div>
+                <Badge variant={r.active ? 'success' : 'muted'}>
+                  {r.active ? 'Activo' : 'Inactivo'}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{r.type}</p>
+              <div className="border-t pt-3">
+                <Link
+                  href={`/resources/${r.id}`}
+                  className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                >
+                  Gestionar
+                </Link>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border sm:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-muted-foreground">

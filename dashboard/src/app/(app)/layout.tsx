@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
-import { brandThemeVars } from '@agendox/ui';
+import { AppFooter, brandThemeVars } from '@agendox/ui';
 import {
   getCurrentOrganization,
   getSession,
   getSubscriptionStatus,
 } from '@/lib/api/session';
 import { getBrandingSettings } from '@/lib/api/settings';
-import { DEFAULT_FEATURES } from '@/lib/api/types';
+import { DEFAULT_FEATURES, DEFAULT_TERMS } from '@/lib/api/types';
+import { TermsGate } from '@/components/legal/terms-gate';
 import { Sidebar } from '@/components/shell/sidebar';
 import { Topbar } from '@/components/shell/topbar';
 import { TrialBanner } from '@/components/shell/trial-banner';
@@ -32,6 +33,11 @@ export default async function AppLayout({
   // Si la organización no se pudo leer, se asumen los defaults de plataforma:
   // esconder secciones por un error de red sería peor que mostrarlas.
   const features = org?.features ?? DEFAULT_FEATURES;
+  const terms = org?.terms ?? DEFAULT_TERMS;
+  // El gate es solo para el Owner: es quien puede obligar al negocio. El resto
+  // del staff opera normalmente mientras el Owner no haya aceptado — dejarlos
+  // afuera bloquearía la agenda por algo que no pueden resolver.
+  const showTermsGate = session.role === 'OWNER' && terms.requiresAcceptance;
 
   return (
     <div
@@ -52,7 +58,9 @@ export default async function AppLayout({
           features={features}
         />
         <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <AppFooter />
       </div>
+      {showTermsGate ? <TermsGate version={terms.currentVersion} /> : null}
     </div>
   );
 }

@@ -4,8 +4,19 @@ import { isExpired } from '@/lib/auth/jwt';
 
 const PUBLIC_PATHS = ['/login'];
 
+/**
+ * Rutas que se leen igual con sesión y sin sesión. No van en `PUBLIC_PATHS`
+ * porque esas, estando logueado, redirigen a la home: el link del footer tiene
+ * que abrir el documento, no sacar al operador de ahí.
+ */
+const OPEN_PATHS = ['/legal'];
+
+function matches(paths: string[], pathname: string): boolean {
+  return paths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 function isPublic(pathname: string): boolean {
-  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  return matches(PUBLIC_PATHS, pathname);
 }
 
 export function middleware(req: NextRequest) {
@@ -13,6 +24,8 @@ export function middleware(req: NextRequest) {
   const token = req.cookies.get(AT)?.value;
   const authed = !!token && !isExpired(token);
   const pub = isPublic(pathname);
+
+  if (matches(OPEN_PATHS, pathname)) return NextResponse.next();
 
   if (!authed && !pub) {
     const url = req.nextUrl.clone();

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ThemeToggle } from '@agendox/ui';
+import { AppFooter, ThemeToggle } from '@agendox/ui';
 import { ApiError } from '@/lib/api/server';
 import { getMe } from '@/lib/api/admin';
 import { LogoutButton } from '@/components/logout-button';
@@ -39,6 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       <main className="flex-1 p-4 sm:p-6">{children}</main>
+      <AppFooter />
     </div>
   );
 }

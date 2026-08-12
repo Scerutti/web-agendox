@@ -95,6 +95,43 @@ export default async function OrganizationDetailPage({
 
       <Card>
         <CardHeader>
+          <CardTitle>Términos y Condiciones</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm">
+          <Row
+            label="Estado"
+            value={
+              org.terms.requiresAcceptance
+                ? org.terms.acceptedVersion
+                  ? 'Pendiente (aceptó una versión anterior)'
+                  : 'Pendiente (nunca aceptó)'
+                : 'Aceptados'
+            }
+          />
+          <Row label="Versión aceptada" value={org.terms.acceptedVersion ?? '—'} />
+          <Row label="Versión vigente" value={org.terms.currentVersion} />
+          <Row
+            label="Fecha de aceptación"
+            value={org.terms.acceptedAt ? fmt(org.terms.acceptedAt) : '—'}
+          />
+          <Row
+            label="Aceptó"
+            value={
+              org.terms.acceptedByEmail ??
+              (org.terms.acceptedByUserId ? 'Usuario dado de baja' : '—')
+            }
+          />
+          {org.terms.requiresAcceptance ? (
+            <p className="pt-3 text-muted-foreground">
+              El dueño ve el pedido de aceptación al entrar al panel. La plataforma no
+              puede aceptar en su nombre.
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Editar datos</CardTitle>
         </CardHeader>
         <CardContent>

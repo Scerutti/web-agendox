@@ -32,6 +32,32 @@ export const DEFAULT_FEATURES: OrganizationFeatures = {
   subscriptionsEnabled: true,
 };
 
+/**
+ * Estado de aceptación de los Términos y Condiciones del negocio. La versión
+ * vigente la decide el backend, no el frontend: `@agendox/legal` exporta la
+ * misma cadena solo para mostrarla en el documento.
+ */
+export interface TermsStatus {
+  currentVersion: string;
+  acceptedVersion: string | null;
+  acceptedAt: string | null;
+  acceptedByUserId: string | null;
+  requiresAcceptance: boolean;
+}
+
+/**
+ * Fallback cuando no se pudo leer la organización: se asume que **no** hace
+ * falta aceptar. Bloquear el panel con un modal inescapable por un error de red
+ * sería peor que mostrarlo de más en la carga siguiente.
+ */
+export const DEFAULT_TERMS: TermsStatus = {
+  currentVersion: '',
+  acceptedVersion: null,
+  acceptedAt: null,
+  acceptedByUserId: null,
+  requiresAcceptance: false,
+};
+
 export interface Organization {
   id: string;
   name: string;
@@ -40,6 +66,7 @@ export interface Organization {
   timezone: string;
   createdAt: string;
   features: OrganizationFeatures;
+  terms: TermsStatus;
 }
 
 export interface SubscriptionInfo {

@@ -13,10 +13,24 @@ import { apiUrl } from '@/lib/env';
 // que el dashboard no tiene ninguna ruta pública de registro.
 const PUBLIC_PATHS = ['/login'];
 
+/**
+ * Rutas que se leen igual con sesión y sin sesión. Se distinguen de
+ * `PUBLIC_PATHS` porque esas, estando logueado, redirigen a la home: si los
+ * documentos legales estuvieran ahí, el link del footer sacaría al usuario del
+ * documento en vez de mostrárselo.
+ */
+const OPEN_PATHS = ['/legal'];
+
+function matches(paths: string[], pathname: string): boolean {
+  return paths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 function isPublic(pathname: string): boolean {
-  return PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+  return matches(PUBLIC_PATHS, pathname);
+}
+
+function isOpen(pathname: string): boolean {
+  return matches(OPEN_PATHS, pathname);
 }
 
 async function tryRefresh(refreshToken: string): Promise<AuthTokens | null> {
@@ -54,6 +68,12 @@ export async function middleware(req: NextRequest) {
 
   const authed = !!accessToken && !isExpired(accessToken);
   const pub = isPublic(pathname);
+
+  if (isOpen(pathname)) {
+    const res = NextResponse.next();
+    if (refreshed) setAuthCookies(res, refreshed);
+    return res;
+  }
 
   if (!authed && !pub) {
     const url = req.nextUrl.clone();

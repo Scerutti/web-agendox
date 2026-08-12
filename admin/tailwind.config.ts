@@ -3,5 +3,9 @@ import preset from '../packages/config/tailwind/preset.cjs';
 
 export default {
   presets: [preset],
-  content: ['./src/**/*.{ts,tsx}', '../packages/ui/src/**/*.{ts,tsx}'],
+  content: [
+    './src/**/*.{ts,tsx}',
+    '../packages/ui/src/**/*.{ts,tsx}',
+    '../packages/legal/src/**/*.{ts,tsx}',
+  ],
 } satisfies Config;

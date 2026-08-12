@@ -466,6 +466,34 @@ export function BookingWizard({
                 {slot ? formatInOrgTz(slot.start, timezone) : '—'}
               </p>
             </div>
+            {/* Aceptación por acción afirmativa: confirmar la reserva es el
+                acto de aceptación, y el aviso está inmediatamente antes del
+                botón. No se usa un checkbox obligatorio a propósito: sumaría un
+                paso a un flujo de conversión sin agregar validez, porque el
+                servicio que se contrata es el turno con el negocio, no con la
+                plataforma. */}
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Al confirmar aceptás los{' '}
+              <Link
+                href="/legal/terms"
+                target="_blank"
+                className="underline underline-offset-4"
+              >
+                Términos y Condiciones
+              </Link>{' '}
+              y la{' '}
+              <Link
+                href="/legal/privacy"
+                target="_blank"
+                className="underline underline-offset-4"
+              >
+                Política de Privacidad
+              </Link>
+              , y que el negocio use tus datos para gestionar este turno. Si el turno
+              requiere una seña, se abona <strong className="font-medium">directamente al
+              negocio</strong>: Agendox no recibe ni administra ese dinero, y la política de
+              cancelación y devolución la define el negocio.
+            </p>
             <Button onClick={confirmBooking} disabled={busy} className="w-full">
               {busy ? 'Reservando…' : 'Confirmar reserva'}
             </Button>

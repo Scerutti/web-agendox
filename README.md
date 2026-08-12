@@ -14,10 +14,18 @@ frontend/
     ├── domain/           # Enums, matriz de transiciones, formatMoney, formatInOrgTz
     ├── api-types/        # Tipos generados desde /docs-json (openapi-typescript)
     ├── api-client/       # apiFetch tipado (openapi-fetch), ApiError, 409, seam de refresh
-    └── ui/               # shadcn/ui + cn + theming + NotificationBell + Toaster
+    ├── legal/            # Términos y Condiciones + Política de Privacidad (texto y versión)
+    └── ui/               # shadcn/ui + cn + theming + NotificationBell + AppFooter + Toaster
 ```
 
 > `landing/` queda fuera del MVP (solo `.gitkeep`).
+
+Las tres apps exponen `/legal/terms` y `/legal/privacy` con el mismo texto, que
+vive en `packages/legal`. Son las mismas rutas en las tres a propósito: el
+`AppFooter` compartido linkea relativo y así no necesita saber en qué app está.
+`TERMS_VERSION` de ese paquete **tiene que coincidir** con
+`CURRENT_TERMS_VERSION` del backend — ver el comentario en
+`packages/legal/src/versions.ts`.
 
 ## Deploys — una app = un proyecto de Vercel
 

@@ -4,6 +4,7 @@ const nextConfig = {
   transpilePackages: [
     '@agendox/ui',
     '@agendox/domain',
+    '@agendox/legal',
     '@agendox/api-client',
     '@agendox/api-types',
     '@agendox/notifications',

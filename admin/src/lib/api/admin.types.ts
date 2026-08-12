@@ -52,12 +52,27 @@ export interface PlanView {
 /** Con qué arranca comercialmente un negocio nuevo. */
 export type OrganizationBilling = 'TRIAL' | 'ACTIVE';
 
+/**
+ * Aceptación de los Términos y Condiciones de la organización. Sirve para
+ * auditar qué versión aceptaron, quién y cuándo, sin entrar a la base.
+ */
+export interface AdminOrgTerms {
+  currentVersion: string;
+  acceptedVersion: string | null;
+  acceptedAt: string | null;
+  acceptedByUserId: string | null;
+  /** `null` si el usuario que aceptó fue dado de baja después. */
+  acceptedByEmail: string | null;
+  requiresAcceptance: boolean;
+}
+
 export interface AdminOrgDetail extends AdminOrgListItem {
   ownerEmail: string | null;
   currentPeriodEnd: string | null;
   trial: { status: string; endsAt: string } | null;
   counts: { users: number; appointments: number };
   features: OrganizationFeatures;
+  terms: AdminOrgTerms;
 }
 
 export interface SuperAdminMe {

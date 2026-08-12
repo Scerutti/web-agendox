@@ -9,6 +9,7 @@ export * from './components/badge';
 export * from './components/dialog';
 export * from './components/sheet';
 export * from './components/notification-bell';
+export * from './components/app-footer';
 export * from './components/toaster';
 export * from './components/callout';
 export * from './components/color-picker';

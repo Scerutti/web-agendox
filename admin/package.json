@@ -1,6 +1,6 @@
 {
   "name": "@agendox/admin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3003",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@agendox/api-client": "workspace:*",
     "@agendox/domain": "workspace:*",
+    "@agendox/legal": "workspace:*",
     "@agendox/ui": "workspace:*",
     "next": "^15.1.2",
     "react": "^19.0.0",

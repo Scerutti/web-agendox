@@ -12,6 +12,11 @@ export interface ActionResult {
 /** Resultado de un alta: incluye el id para poder redirigir al detalle. */
 export interface CreateResult extends ActionResult {
   id?: string;
+  /**
+   * Qué pasó con el mail de bienvenida. `failed` no invalida el alta: el negocio
+   * quedó creado y hay que pasarle el link al dueño por otro canal.
+   */
+  welcomeEmail?: 'sent' | 'failed' | 'skipped';
 }
 
 /** Refresca las tres vistas que pueden estar mostrando datos de la organización. */
@@ -60,6 +65,27 @@ export async function disableOrganization(id: string): Promise<ActionResult> {
   }
 }
 
+/**
+ * Borrado definitivo. Sólo funciona sobre organizaciones ya dadas de baja: el
+ * backend responde 409 en cualquier otro estado. No tiene vuelta atrás.
+ *
+ * No revalida el detalle de la organización porque esa página ya no existe:
+ * quien llama tiene que salir de ahí (la tabla es el único destino válido).
+ */
+export async function deleteOrganizationPermanently(id: string): Promise<ActionResult> {
+  try {
+    const result = await serverFetch<{ name: string; deletedRows: number }>(
+      `/admin/organizations/${id}/permanent`,
+      { method: 'DELETE' },
+    );
+    revalidatePath('/organizations');
+    revalidatePath('/');
+    return { ok: true, message: `${result.name} se eliminó definitivamente` };
+  } catch (e) {
+    return failure(e, 'No se pudo eliminar la organización');
+  }
+}
+
 export async function createOrganization(
   _prev: CreateResult,
   formData: FormData,
@@ -81,18 +107,28 @@ export async function createOrganization(
       lastName: str(formData, 'ownerLastName'),
     },
     billing,
+    // El checkbox no viaja cuando está destildado, así que su ausencia es "no".
+    sendWelcomeEmail: formData.get('sendWelcomeEmail') !== null,
     // Solo viaja con ACTIVE: con TRIAL el backend lo ignora y un uuid vacío
     // haría fallar la validación.
     ...(billing === 'ACTIVE' ? { planId } : {}),
   };
 
   try {
-    const created = await serverFetch<{ organizationId: string }>('/admin/organizations', {
+    const created = await serverFetch<{
+      organizationId: string;
+      welcomeEmail: 'sent' | 'failed' | 'skipped';
+    }>('/admin/organizations', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
     revalidateOrg(created.organizationId);
-    return { ok: true, message: 'Negocio creado', id: created.organizationId };
+    return {
+      ok: true,
+      message: 'Negocio creado',
+      id: created.organizationId,
+      welcomeEmail: created.welcomeEmail,
+    };
   } catch (e) {
     return failure(e, 'No se pudo crear el negocio');
   }

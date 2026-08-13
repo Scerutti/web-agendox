@@ -190,10 +190,10 @@ export default async function OrganizationDetailPage({
             {org.status === 'SUSPENDED'
               ? 'La organización está suspendida y no puede operar. Reactivala para restaurar el acceso.'
               : org.status === 'DISABLED'
-                ? 'La organización está dada de baja. Los datos siguen guardados; reactivarla restaura el acceso.'
+                ? 'La organización está dada de baja. Los datos siguen guardados; reactivarla restaura el acceso. Si ya no va más, podés eliminarla definitivamente: eso sí borra todo y libera el slug y el email del dueño.'
                 : 'Suspender bloquea la operación del negocio (staff y reservas públicas) de forma temporal. Dar de baja lo cierra, conservando los datos.'}
           </p>
-          <OrgActions id={org.id} name={org.name} status={org.status} />
+          <OrgActions id={org.id} name={org.name} slug={org.slug} status={org.status} />
         </CardContent>
       </Card>
     </div>

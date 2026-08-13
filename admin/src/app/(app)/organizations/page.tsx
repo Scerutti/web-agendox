@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Badge, buttonVariants } from '@agendox/ui';
 import { getOrganizations, ORG_STATUS_UI, SUBSCRIPTION_STATUS_LABEL } from '@/lib/api/admin';
+import { DeleteOrgButton } from './delete-org-button';
 import { OrgFilters } from './org-filters';
 
 export default async function OrganizationsPage({
@@ -49,7 +50,12 @@ export default async function OrganizationsPage({
             {orgs.map((o) => {
               const ui = ORG_STATUS_UI[o.status] ?? { label: o.status, variant: 'muted' as const };
               return (
-                <tr key={o.id} className="border-b last:border-0">
+                <tr
+                  key={o.id}
+                  // Las dadas de baja quedan atenuadas: siguen en la tabla, pero
+                  // no son cuentas con las que se opere.
+                  className={`border-b last:border-0${o.status === 'DISABLED' ? ' opacity-60' : ''}`}
+                >
                   <td className="p-3">
                     <div className="font-medium">{o.name}</div>
                     <div className="text-xs text-muted-foreground">/{o.slug}</div>
@@ -66,12 +72,19 @@ export default async function OrganizationsPage({
                     {new Date(o.createdAt).toLocaleDateString('es-AR')}
                   </td>
                   <td className="whitespace-nowrap p-3 text-right">
-                    <Link
-                      href={`/organizations/${o.id}`}
-                      className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-                    >
-                      Ver
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/organizations/${o.id}`}
+                        className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+                      >
+                        Ver
+                      </Link>
+                      {/* Sólo sobre cuentas ya dadas de baja: el borrado físico es
+                          el segundo paso de la baja, no un atajo desde la tabla. */}
+                      {o.status === 'DISABLED' && (
+                        <DeleteOrgButton id={o.id} name={o.name} slug={o.slug} />
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

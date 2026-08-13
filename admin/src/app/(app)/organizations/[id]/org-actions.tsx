@@ -16,14 +16,17 @@ import {
   reactivateOrganization,
   suspendOrganization,
 } from '../actions';
+import { DeleteOrgButton } from '../delete-org-button';
 
 export function OrgActions({
   id,
   name,
+  slug,
   status,
 }: {
   id: string;
   name: string;
+  slug: string;
   status: string;
 }) {
   const router = useRouter();
@@ -62,9 +65,17 @@ export function OrgActions({
       )}
 
       {disabled ? (
-        <Button variant="default" disabled={busy} onClick={() => run(() => reactivateOrganization(id))}>
-          Reactivar
-        </Button>
+        <>
+          <Button
+            variant="default"
+            disabled={busy}
+            onClick={() => run(() => reactivateOrganization(id))}
+          >
+            Reactivar
+          </Button>
+          {/* El borrado definitivo sólo existe con la cuenta ya dada de baja. */}
+          <DeleteOrgButton id={id} name={name} slug={slug} redirectToList size="default" />
+        </>
       ) : (
         <Button variant="destructive" disabled={busy} onClick={() => setConfirmOpen(true)}>
           Dar de baja

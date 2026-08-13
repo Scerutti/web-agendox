@@ -45,7 +45,14 @@ export function CreateOrgForm({ plans }: { plans: PlanView[] }) {
   useEffect(() => {
     if (!state.message) return;
     if (state.ok) {
-      toast.success(state.message);
+      // El alta salió bien aunque el mail falle, así que el aviso del mail va
+      // aparte y como warning: hay que hacer algo (pasarle el link a mano).
+      toast.success(
+        state.welcomeEmail === 'sent' ? 'Negocio creado y mail de bienvenida enviado' : state.message,
+      );
+      if (state.welcomeEmail === 'failed') {
+        toast.error('No se pudo enviar el mail de bienvenida. Pasale el link al dueño a mano.');
+      }
       if (state.id) router.push(`/organizations/${state.id}`);
     } else {
       toast.error(state.message);
@@ -134,6 +141,22 @@ export function CreateOrgForm({ plans }: { plans: PlanView[] }) {
             autoComplete="new-password"
           />
         </Field>
+
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            name="sendWelcomeEmail"
+            defaultChecked
+            className="mt-1 h-4 w-4 border-input"
+          />
+          <span>
+            <span className="block text-sm font-medium">Mandarle el mail de bienvenida</span>
+            <span className="block text-xs text-muted-foreground">
+              Le llega el link al panel y su usuario. La contraseña no viaja en el mail:
+              esa se la pasás vos. Destildalo en cuentas internas, de demo o de QA.
+            </span>
+          </span>
+        </label>
       </fieldset>
 
       <fieldset className="space-y-4 rounded-md border p-4">

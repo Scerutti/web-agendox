@@ -53,8 +53,12 @@ export default async function OrganizationsPage({
                 <tr
                   key={o.id}
                   // Las dadas de baja quedan atenuadas: siguen en la tabla, pero
-                  // no son cuentas con las que se opere.
-                  className={`border-b last:border-0${o.status === 'DISABLED' ? ' opacity-60' : ''}`}
+                  // no son cuentas con las que se opere. Se atenúa el texto y no
+                  // la opacidad de la fila: `opacity` la heredaría todo lo que
+                  // cuelgue de acá, incluidos los botones y el modal de borrado.
+                  className={`border-b last:border-0${
+                    o.status === 'DISABLED' ? ' text-muted-foreground' : ''
+                  }`}
                 >
                   <td className="p-3">
                     <div className="font-medium">{o.name}</div>

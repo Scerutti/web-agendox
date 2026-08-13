@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Role } from '@agendox/domain';
-import { Button, Sheet, ThemeToggle, cn } from '@agendox/ui';
+import { Button, Sheet, cn } from '@agendox/ui';
 import { ROLE_LABEL } from '@/lib/org-ui';
 import type { OrganizationFeatures } from '@/lib/api/types';
 import { LogoutButton } from './logout-button';
@@ -106,11 +106,8 @@ export function MobileNav({
               </span>
             </Link>
 
-            <div className="flex items-center justify-between gap-2 px-3">
-              <span className="text-sm text-muted-foreground">Tema</span>
-              <ThemeToggle />
-            </div>
-
+            {/* El tema no está acá: es un botón suelto en la barra superior,
+                que además queda a la vista sin abrir el menú. */}
             <div className="px-1">
               <LogoutButton />
             </div>

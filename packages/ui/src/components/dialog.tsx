@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -13,6 +14,10 @@ export function Dialog({
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
 }) {
+  // El portal necesita `document`, que no existe en el render del servidor.
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
   React.useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -22,9 +27,13 @@ export function Dialog({
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onOpenChange]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  // Va montado en `body` y no donde se lo invoca: si no, cualquier ancestro con
+  // `opacity`, `transform` u `overflow` se lo lleva puesto — le hereda la
+  // transparencia, lo recorta o lo mete adentro de un scroll horizontal. Pasaba
+  // con el modal disparado desde una fila de tabla.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50"
@@ -44,7 +53,8 @@ export function Dialog({
         */}
         <div className="min-h-0 flex-1 overflow-y-auto p-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

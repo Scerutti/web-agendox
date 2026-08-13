@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Badge,
@@ -10,11 +10,11 @@ import {
   CardHeader,
   CardTitle,
   Input,
-  OtpInput,
   buttonVariants,
   toast,
 } from '@agendox/ui';
 import { formatMoney, formatInOrgTz, formatTimeInOrgTz } from '@agendox/domain';
+import { CustomerAuth } from '@/components/customer-auth';
 import { Field } from '@/components/form/field';
 import { APPOINTMENT_STATUS_UI } from '@/lib/appointment-ui';
 import { book, fetchAvailability, fetchResources, saveProfile } from './actions';
@@ -24,38 +24,38 @@ import type {
   PublicService,
   PublicServiceOption,
 } from '@/lib/api/public';
-import type { CustomerAppointment } from '@/lib/api/customer';
+import type { CustomerAppointment, CustomerSession } from '@/lib/api/customer';
 
 type Step = 'select' | 'auth' | 'profile' | 'confirm' | 'done';
 
 const selectClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
-/**
- * Espera antes de habilitar cada reenvío, en segundos. Espeja la escala del
- * backend (`RESEND_DELAYS_SECONDS` en request-customer-otp.use-case.ts), que es
- * quien realmente decide: acá es solo para mostrar la cuenta regresiva sin
- * tener que pedir permiso al servidor y comerse un error.
- */
-const RESEND_DELAYS_SECONDS = [30, 60, 90, 120, 150];
-const MAX_RESENDS = RESEND_DELAYS_SECONDS.length;
-
-function formatCountdown(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
-}
-
 export function BookingWizard({
   slug,
   timezone,
   services,
+  session,
 }: {
   slug: string;
   timezone: string;
   services: PublicService[];
+  /** Identificación resuelta en el servidor: define si hay que pedir el código. */
+  session: CustomerSession;
 }) {
   const [step, setStep] = useState<Step>('select');
+  /**
+   * Se arranca con lo que dijo el servidor, pero es estado del cliente porque
+   * cambia sin recargar: al validar un código acá mismo, o al soltar la sesión
+   * con "No soy yo".
+   */
+  const [identifiedAs, setIdentifiedAs] = useState<string | null>(
+    session.authenticated ? session.email : null,
+  );
+  const [authenticated, setAuthenticated] = useState(session.authenticated);
+  // También es estado: si completa el perfil en esta visita, volver a "Continuar"
+  // no lo tiene que mandar de nuevo a llenar el formulario.
+  const [profileComplete, setProfileComplete] = useState(session.profileComplete);
   const [busy, setBusy] = useState(false);
   // Idempotency key estable por intento de reserva (mismo key en reintentos por
   // doble-submit → el backend deduplica). Se regenera si un 409 vuelve a selección.
@@ -70,16 +70,8 @@ export function BookingWizard({
   const [slots, setSlots] = useState<AvailabilitySlot[] | null>(null);
   const [slot, setSlot] = useState<AvailabilitySlot | null>(null);
 
-  // Auth
-  const [email, setEmail] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [code, setCode] = useState('');
-  /** Envíos hechos para el email actual (el inicial cuenta como 0 reenvíos). */
-  const [resendCount, setResendCount] = useState(0);
-  /** Momento (epoch ms) a partir del cual se puede volver a pedir un código. */
-  const [cooldownUntil, setCooldownUntil] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [resendBlocked, setResendBlocked] = useState(false);
+  // La identificación (email + código) vive en `CustomerAuth`: la comparte con
+  // la página de inicio de sesión del portal.
 
   // Profile
   const [profile, setProfile] = useState({
@@ -134,107 +126,21 @@ export function BookingWizard({
     setSlots(res.result.slots);
   }
 
-  // Cuenta regresiva del reenvío. Solo vive mientras hay espera pendiente: no
-  // deja un intervalo corriendo durante el resto de la reserva.
-  useEffect(() => {
-    if (!cooldownUntil) return;
-    function tick() {
-      const left = Math.ceil((cooldownUntil - Date.now()) / 1000);
-      setSecondsLeft(left > 0 ? left : 0);
-      if (left <= 0) setCooldownUntil(0);
-    }
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [cooldownUntil]);
-
   /**
-   * Devuelve el paso de identificación a cero. Sin esto, quien se equivoca de
-   * email queda encerrado: el input se deshabilita al enviar y el contador
-   * seguiría corriendo contra una dirección que no es la suya.
+   * Suelta la sesión y vuelve a pedir el código.
+   *
+   * Es la contracara obligatoria de saltear la identificación: sin esto, en un
+   * teléfono prestado —o cuando alguien reserva para otra persona— la reserva se
+   * haría en silencio a nombre de quien entró antes, y recién se descubre cuando
+   * el turno le aparece al que no era.
    */
-  function resetOtpFlow() {
-    setOtpSent(false);
-    setCode('');
-    setResendCount(0);
-    setCooldownUntil(0);
-    setSecondsLeft(0);
-    setResendBlocked(false);
-  }
-
-  async function sendOtp() {
-    if (!email) {
-      toast.error('Ingresá tu email');
-      return;
-    }
+  async function switchIdentity() {
     setBusy(true);
-    const r = await fetch(`/api/portal/${slug}/otp/request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    const data = await r.json().catch(() => ({}));
+    await fetch(`/api/portal/${slug}/logout`, { method: 'POST' }).catch(() => null);
     setBusy(false);
-
-    // El servidor es el que manda. Si corta con 429 se adopta su espera: eso es
-    // lo que cubre al que recarga la página para saltear el contador local.
-    if (r.status === 429) {
-      // `details.retryAfterSeconds` lo pone el tope por email del backend; la
-      // cabecera `Retry-After`, el rate limiter por IP. Cualquiera de los dos
-      // sabe más que una espera adivinada acá.
-      const retry =
-        Number(data?.details?.retryAfterSeconds) ||
-        Number(r.headers.get('retry-after')) ||
-        RESEND_DELAYS_SECONDS[0]!;
-      setOtpSent(true);
-      setCooldownUntil(Date.now() + retry * 1000);
-      if (resendCount >= MAX_RESENDS) setResendBlocked(true);
-      toast.error(data.message || 'Esperá unos segundos antes de pedir otro código');
-      return;
-    }
-
-    if (!r.ok) {
-      toast.error('No se pudo enviar el código');
-      return;
-    }
-
-    // El envío inicial no cuenta como reenvío, pero sí arranca la espera: si no,
-    // el botón queda disponible al instante y se puede golpear en loop.
-    const nextCount = otpSent ? resendCount + 1 : resendCount;
-    const wait = RESEND_DELAYS_SECONDS[nextCount] ?? RESEND_DELAYS_SECONDS.at(-1)!;
-    setResendCount(nextCount);
-    setOtpSent(true);
-    setCooldownUntil(Date.now() + wait * 1000);
-    if (nextCount >= MAX_RESENDS) setResendBlocked(true);
-    toast.success('Te enviamos un código', {
-      description: 'Si no lo ves en la bandeja de entrada, revisá la carpeta de spam.',
-    });
-  }
-
-  /**
-   * `submittedCode` llega cuando el disparo viene de completar la última casilla:
-   * en ese momento el estado `code` del padre todavía no se actualizó, así que hay
-   * que usar el valor que manda el input y no el de la clausura.
-   */
-  async function verifyOtp(submittedCode?: string) {
-    const value = submittedCode ?? code;
-    if (value.length < 6) {
-      toast.error('Ingresá los 6 dígitos del código');
-      return;
-    }
-    setBusy(true);
-    const r = await fetch(`/api/portal/${slug}/otp/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code: value }),
-    });
-    const data = await r.json().catch(() => ({}));
-    setBusy(false);
-    if (!r.ok) {
-      toast.error(data.message || 'Código inválido');
-      return;
-    }
-    setStep(data.profileComplete ? 'confirm' : 'profile');
+    setAuthenticated(false);
+    setIdentifiedAs(null);
+    setStep('auth');
   }
 
   async function submitProfile() {
@@ -250,8 +156,10 @@ export function BookingWizard({
       phone: profile.phone || undefined,
     });
     setBusy(false);
-    if (res.ok) setStep('confirm');
-    else toast.error(res.message);
+    if (res.ok) {
+      setProfileComplete(true);
+      setStep('confirm');
+    } else toast.error(res.message);
   }
 
   async function confirmBooking() {
@@ -396,10 +304,14 @@ export function BookingWizard({
               </div>
             )}
 
+            {/* Con la sesión viva no se vuelve a pedir el código: se salta
+                derecho a confirmar, o al perfil si nunca lo completó. */}
             <Button
               className="w-full"
               disabled={!slot}
-              onClick={() => setStep('auth')}
+              onClick={() =>
+                setStep(!authenticated ? 'auth' : profileComplete ? 'confirm' : 'profile')
+              }
             >
               Continuar
             </Button>
@@ -407,92 +319,17 @@ export function BookingWizard({
         )}
 
         {step === 'auth' && (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Te identificamos por email con un código de un solo uso.
-            </p>
-            <Field label="Email" htmlFor="email">
-              <Input
-                id="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={otpSent}
-              />
-            </Field>
-            {!otpSent ? (
-              <>
-                <Button onClick={sendOtp} disabled={busy} className="w-full">
-                  {busy ? 'Enviando…' : 'Enviar código'}
-                </Button>
-                <BackButton onClick={() => setStep('select')} />
-              </>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Código de 6 dígitos</p>
-                  <OtpInput
-                    name="code"
-                    autoFocus
-                    autoSubmit={false}
-                    disabled={busy}
-                    onChange={setCode}
-                    onComplete={verifyOtp}
-                  />
-                  {/* El código llega por email y ahí es donde se cae: si no está
-                      en la bandeja, casi siempre está en spam. Decirlo acá evita
-                      el reenvío en loop y el abandono de la reserva. */}
-                  <p className="text-xs text-muted-foreground">
-                    Te lo enviamos a <span className="font-medium">{email}</span>. Si no lo
-                    ves en unos segundos, <strong>revisá la carpeta de spam</strong> o
-                    correo no deseado.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={resetOtpFlow}
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
-                    Usar otro email
-                  </button>
-                </div>
-
-                <Button
-                  onClick={() => verifyOtp()}
-                  disabled={busy || code.length < 6}
-                  className="w-full"
-                >
-                  {busy ? 'Verificando…' : 'Verificar'}
-                </Button>
-
-                {/* Las dos acciones secundarias van separadas y a los extremos:
-                    juntas se tocaba la equivocada, sobre todo en mobile. */}
-                <div className="flex items-center justify-between gap-4 border-t pt-4">
-                  <BackButton onClick={() => setStep('select')} />
-                  <button
-                    type="button"
-                    className="text-xs font-medium text-primary hover:underline disabled:no-underline disabled:opacity-50"
-                    onClick={sendOtp}
-                    disabled={busy || resendBlocked || secondsLeft > 0}
-                  >
-                    {resendBlocked
-                      ? 'Límite alcanzado'
-                      : secondsLeft > 0
-                        ? `Reenviar en ${formatCountdown(secondsLeft)}`
-                        : 'Reenviar código'}
-                  </button>
-                </div>
-
-                {resendBlocked ? (
-                  <p className="text-xs text-destructive">
-                    Alcanzaste el límite de reenvíos. Esperá unos minutos y volvé a
-                    intentar, o comunicate con el negocio para reservar por otra vía.
-                  </p>
-                ) : null}
-              </>
-            )}
-          </>
+          <CustomerAuth
+            slug={slug}
+            intro="Te identificamos por email con un código de un solo uso."
+            back={<BackButton onClick={() => setStep('select')} />}
+            onAuthenticated={(result) => {
+              setAuthenticated(true);
+              setIdentifiedAs(result.email);
+              setProfileComplete(result.profileComplete);
+              setStep(result.profileComplete ? 'confirm' : 'profile');
+            }}
+          />
         )}
 
         {step === 'profile' && (
@@ -546,6 +383,25 @@ export function BookingWizard({
 
         {step === 'confirm' && (
           <>
+            {/* Quién va a quedar como titular del turno. Va antes del resumen y
+                no escondido al pie: si el teléfono es prestado, este es el
+                momento de darse cuenta, no cuando el turno le llega a otro. */}
+            {identifiedAs ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/50 p-3 text-sm">
+                <span className="min-w-0 break-all">
+                  <span className="text-muted-foreground">Reservás como </span>
+                  <span className="font-medium">{identifiedAs}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={switchIdentity}
+                  disabled={busy}
+                  className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
+                >
+                  No soy yo
+                </button>
+              </div>
+            ) : null}
             <div className="space-y-1 rounded-md border p-3 text-sm">
               <p>
                 <span className="text-muted-foreground">Servicio: </span>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { hasCustomerSession } from '@/lib/api/customer';
+import { hasCustomerSession, loginUrl } from '@/lib/api/customer';
 
 // El portal del cliente no se indexa.
 export const metadata: Metadata = {
@@ -20,7 +20,9 @@ export default async function PortalLayout({
   // que este redirect se aplique. Cada página del portal repite el corte con
   // `requireCustomerSession`; no es redundante.
   if (!(await hasCustomerSession(slug))) {
-    redirect(`/${slug}`);
+    // Sin `next` porque el layout no conoce la ruta concreta; la página que
+    // corre en paralelo sí, y su redirect es el que lleva el destino.
+    redirect(loginUrl(slug));
   }
   return <>{children}</>;
 }

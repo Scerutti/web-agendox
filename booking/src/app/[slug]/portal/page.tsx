@@ -22,7 +22,7 @@ export default async function PortalPage({
   const { slug } = await params;
   // Antes de cualquier fetch: sin esto la página pide los turnos igual mientras
   // el layout redirige, y el 401 se lleva puesto al redirect.
-  await requireCustomerSession(slug);
+  await requireCustomerSession(slug, `/${slug}/portal`);
 
   const org = await getPublicOrg(slug);
   if (!org) notFound();
@@ -32,7 +32,7 @@ export default async function PortalPage({
   try {
     [me, appointments] = await Promise.all([getMe(slug), getMyAppointments(slug)]);
   } catch (e) {
-    redirectIfSessionExpired(e, slug);
+    redirectIfSessionExpired(e, slug, `/${slug}/portal`);
     throw e;
   }
 

@@ -20,7 +20,11 @@ export function setCustomerCookie(
 ): void {
   res.cookies.set(custCookieName(slug), token, {
     ...base,
-    maxAge: 60 * 60 * 24, // 1 día (la validez real la fija el exp del token)
+    // Un día, **igual** que `JWT_CUSTOMER_TTL` en el backend. Que no coincidan
+    // es lo que producía el peor estado posible: la cookie viva hacía creer que
+    // había sesión y la API rechazaba todo con 401. Si allá se cambia, acá
+    // también.
+    maxAge: 60 * 60 * 24,
   });
 }
 

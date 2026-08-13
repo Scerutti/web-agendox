@@ -16,7 +16,8 @@ export default async function PortalAppointmentPage({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const { slug, id } = await params;
-  await requireCustomerSession(slug);
+  const here = `/${slug}/portal/${id}`;
+  await requireCustomerSession(slug, here);
 
   const org = await getPublicOrg(slug);
   if (!org) notFound();
@@ -24,7 +25,7 @@ export default async function PortalAppointmentPage({
   // Un 401 acá es sesión vencida y se resuelve volviendo a pedir el código; el
   // `notFound` queda para lo que sí es un turno inexistente o de otro cliente.
   const appointment = await getMyAppointment(slug, id).catch((e: unknown) => {
-    redirectIfSessionExpired(e, slug);
+    redirectIfSessionExpired(e, slug, here);
     return null;
   });
   if (!appointment) notFound();

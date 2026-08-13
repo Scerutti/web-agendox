@@ -33,6 +33,12 @@ export async function hasCustomerSession(slug: string): Promise<boolean> {
   return !!store.get(custCookieName(slug))?.value;
 }
 
+/** Pantalla de identificación, con a dónde volver una vez adentro. */
+export function loginUrl(slug: string, next?: string): string {
+  const base = `/${slug}/ingresar`;
+  return next ? `${base}?next=${encodeURIComponent(next)}` : base;
+}
+
 /**
  * Corta el render de una página del portal si no hay sesión de cliente.
  *
@@ -42,22 +48,61 @@ export async function hasCustomerSession(slug: string): Promise<boolean> {
  * y esa excepción sin manejar tapa al redirect — en dev queda el error en
  * consola y en producción es una pantalla de error en vez de volver a la página
  * del negocio.
+ *
+ * `next` es la ruta a la que se vuelve después de entrar: sin eso, quien abre el
+ * link de un turno puntual termina en la lista y tiene que buscarlo de nuevo.
  */
-export async function requireCustomerSession(slug: string): Promise<void> {
-  if (!(await hasCustomerSession(slug))) redirect(`/${slug}`);
+export async function requireCustomerSession(slug: string, next?: string): Promise<void> {
+  if (!(await hasCustomerSession(slug))) redirect(loginUrl(slug, next));
 }
 
 /**
- * Vuelve a la página del negocio si el error es una sesión vencida; con
+ * Manda a identificarse de nuevo si el error es una sesión vencida; con
  * cualquier otro error no hace nada y deja que decida quien llama.
  *
- * Es el caso que no cubre {@link requireCustomerSession}: la cookie dura un día
- * pero el token adentro vale 30 minutos, así que hay una ventana larga en la que
- * la cookie está pero la API rechaza. Ahí corresponde pedir el código de nuevo,
- * no mostrar un error.
+ * Es el caso que no cubre {@link requireCustomerSession}, que sólo mira que la
+ * cookie exista. Hoy la cookie y el token duran lo mismo, así que la ventana es
+ * angosta, pero no es cero: el token puede vencer entre el chequeo y el pedido,
+ * o dejar de validar si se rota `JWT_CUSTOMER_SECRET`. Ahí corresponde pedir el
+ * código de nuevo, no mostrar un error.
  */
-export function redirectIfSessionExpired(error: unknown, slug: string): void {
-  if (error instanceof ApiError && error.isUnauthorized) redirect(`/${slug}`);
+export function redirectIfSessionExpired(error: unknown, slug: string, next?: string): void {
+  if (error instanceof ApiError && error.isUnauthorized) redirect(loginUrl(slug, next));
+}
+
+/** Estado de identificación del visitante, para saber si hay que pedirle el código. */
+export interface CustomerSession {
+  authenticated: boolean;
+  /** `false` si nunca completó sus datos: hay que pedirle el perfil antes de reservar. */
+  profileComplete: boolean;
+  email: string | null;
+}
+
+const NO_SESSION: CustomerSession = {
+  authenticated: false,
+  profileComplete: false,
+  email: null,
+};
+
+/**
+ * Resuelve si el visitante ya está identificado en este negocio.
+ *
+ * No alcanza con mirar la cookie: hay que preguntarle a la API, porque el token
+ * puede estar vencido. Y no sirve `getMe`, que devuelve `null` tanto para "no
+ * autenticado" como para "autenticado pero sin perfil todavía" — acá esa
+ * diferencia es justo lo que se necesita distinguir.
+ *
+ * Ante un error que no sea 401 se responde "sin sesión": como mucho se le pide
+ * el código de nuevo, que es molesto pero no rompe la reserva.
+ */
+export async function getCustomerSession(slug: string): Promise<CustomerSession> {
+  if (!(await hasCustomerSession(slug))) return NO_SESSION;
+  try {
+    const me = await customerFetch<CustomerProfile | null>(slug, '/portal/me');
+    return { authenticated: true, profileComplete: me !== null, email: me?.email ?? null };
+  } catch {
+    return NO_SESSION;
+  }
 }
 
 export interface CustomerProfile {

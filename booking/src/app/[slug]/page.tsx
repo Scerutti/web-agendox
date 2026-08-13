@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { buttonVariants } from '@agendox/ui';
 import { getPublicOrg, getPublicServices } from '@/lib/api/public';
+import { getCustomerSession } from '@/lib/api/customer';
 import { BookingWizard } from './booking-wizard';
 
 export default async function SlugHome({
@@ -32,6 +33,7 @@ export default async function SlugHome({
           slug={slug}
           timezone={org.timezone}
           services={await getPublicServices(slug)}
+          session={await getCustomerSession(slug)}
         />
       ) : (
         <p className="rounded-lg border p-6 text-sm text-muted-foreground">

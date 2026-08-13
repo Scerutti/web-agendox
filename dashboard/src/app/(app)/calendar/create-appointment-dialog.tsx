@@ -26,7 +26,7 @@ import type { ResourceView } from '@/lib/api/resources';
 import type { ClientView } from '@/lib/api/clients';
 
 const selectClass =
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'flex h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 export function CreateAppointmentDialog({
   open,

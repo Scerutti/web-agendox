@@ -18,12 +18,17 @@ type View = 'day' | 'week';
 const HOUR_PX = 48;
 const DEFAULT_START_MIN = 8 * 60;
 const DEFAULT_END_MIN = 20 * 60;
-const MIN_BLOCK_PX = 22;
+// Alto mínimo del bloque: una línea de `text-xs` (16px) más el padding (8px).
+// Por debajo de eso el primer renglón sale cortado.
+const MIN_BLOCK_PX = 24;
 
 // Los controles son `h-10` en mobile (área táctil) y vuelven a `h-9` desde `sm`
 // para no engordar la toolbar del escritorio.
+// `min-w-0`: el select de recursos mide, como mínimo, el nombre de recurso más
+// largo. Dentro de la grilla de la toolbar eso empujaba la página a lo ancho en
+// mobile.
 const selectClass =
-  'h-10 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:w-auto';
+  'h-10 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:w-auto';
 
 const STATUS_ORDER: AppointmentStatus[] = [
   'PENDING_APPROVAL',
@@ -296,11 +301,21 @@ function CalendarGrid({ days, byDay, timezone, todayKey, onSelect }: ViewProps) 
                       MIN_BLOCK_PX,
                     );
                     const width = 100 / ev.cols;
+                    // El bloque mide lo que dura el turno: en media hora no hay
+                    // lugar para tres líneas y la etiqueta de estado salía
+                    // cortada por el `overflow-hidden` ("Seña pendiente" era la
+                    // peor). Se muestra sólo lo que entra; el estado igual queda
+                    // legible en el punto de color, en el `title` y en el
+                    // detalle del turno. Alturas con `text-xs`: línea 16px,
+                    // badge 24px, padding del bloque 8px.
+                    const showClient = height >= 40;
+                    const showStatus = height >= 64 && ev.cols === 1;
                     return (
                       <button
                         key={ev.appointment.id}
                         type="button"
                         onClick={() => onSelect(ev.appointment)}
+                        title={`${formatTimeInOrgTz(ev.appointment.startsAt, timezone)} · ${ev.appointment.serviceName} · ${ev.appointment.clientName} · ${ui.label}`}
                         className="absolute overflow-hidden rounded-md border bg-card p-1 text-left text-xs shadow-sm hover:z-10 hover:ring-2 hover:ring-ring"
                         style={{
                           top,
@@ -309,16 +324,34 @@ function CalendarGrid({ days, byDay, timezone, todayKey, onSelect }: ViewProps) 
                           width: `calc(${width}% - 4px)`,
                         }}
                       >
-                        <div className="truncate font-medium">
-                          {formatTimeInOrgTz(ev.appointment.startsAt, timezone)}{' '}
-                          {ev.appointment.serviceName}
+                        <div className="flex items-center gap-1">
+                          <span
+                            className={cn(
+                              'h-1.5 w-1.5 shrink-0 rounded-full',
+                              ui.dot,
+                            )}
+                            aria-hidden
+                          />
+                          <span className="truncate font-medium">
+                            {formatTimeInOrgTz(ev.appointment.startsAt, timezone)}{' '}
+                            {ev.appointment.serviceName}
+                          </span>
                         </div>
-                        <div className="truncate text-muted-foreground">
-                          {ev.appointment.clientName}
-                        </div>
-                        <Badge variant={ui.variant} className="mt-0.5">
-                          {ui.label}
-                        </Badge>
+                        {showClient ? (
+                          <div className="truncate text-muted-foreground">
+                            {ev.appointment.clientName}
+                          </div>
+                        ) : null}
+                        {showStatus ? (
+                          <Badge
+                            variant={ui.variant}
+                            className="mt-0.5 max-w-full truncate"
+                          >
+                            {ui.short}
+                          </Badge>
+                        ) : (
+                          <span className="sr-only">{ui.label}</span>
+                        )}
                       </button>
                     );
                   })}

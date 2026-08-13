@@ -179,8 +179,13 @@ export function BookingWizard({
     // El servidor es el que manda. Si corta con 429 se adopta su espera: eso es
     // lo que cubre al que recarga la página para saltear el contador local.
     if (r.status === 429) {
+      // `details.retryAfterSeconds` lo pone el tope por email del backend; la
+      // cabecera `Retry-After`, el rate limiter por IP. Cualquiera de los dos
+      // sabe más que una espera adivinada acá.
       const retry =
-        Number(data?.details?.retryAfterSeconds) || RESEND_DELAYS_SECONDS[0]!;
+        Number(data?.details?.retryAfterSeconds) ||
+        Number(r.headers.get('retry-after')) ||
+        RESEND_DELAYS_SECONDS[0]!;
       setOtpSent(true);
       setCooldownUntil(Date.now() + retry * 1000);
       if (resendCount >= MAX_RESENDS) setResendBlocked(true);

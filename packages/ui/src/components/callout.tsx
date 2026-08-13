@@ -38,7 +38,9 @@ export function Callout({ tone = 'info', title, children, className }: CalloutPr
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-      <div className="space-y-1">
+      {/* `min-w-0`: sin esto el texto no puede encogerse por debajo de su
+          palabra más larga (o de un link sin espacios) y desborda el ancho. */}
+      <div className="min-w-0 space-y-1">
         {title ? <p className="font-medium text-foreground">{title}</p> : null}
         <div>{children}</div>
       </div>

@@ -72,6 +72,13 @@ export function WeeklyIntervalsEditor({
               <p className="text-xs text-muted-foreground">{emptyLabel}</p>
             ) : (
               <div className="space-y-2">
+                {/*
+                  En mobile los dos campos se reparten el ancho disponible
+                  (`flex-1 min-w-0`) y el botón queda como una “×”: con dos
+                  campos de 128px fijos más la palabra “Quitar” la fila no
+                  entraba en un teléfono y empujaba la página a lo ancho. Desde
+                  `sm` vuelve el ancho fijo y el texto.
+                */}
                 {intervals.map((interval, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <Input
@@ -86,9 +93,9 @@ export function WeeklyIntervalsEditor({
                           ),
                         )
                       }
-                      className="w-32"
+                      className="min-w-0 flex-1 sm:w-32 sm:flex-none"
                     />
-                    <span className="text-muted-foreground">–</span>
+                    <span className="shrink-0 text-muted-foreground">–</span>
                     <Input
                       type="time"
                       value={interval.end}
@@ -101,15 +108,20 @@ export function WeeklyIntervalsEditor({
                           ),
                         )
                       }
-                      className="w-32"
+                      className="min-w-0 flex-1 sm:w-32 sm:flex-none"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
+                      aria-label={`Quitar intervalo ${i + 1} de ${label}`}
+                      className="shrink-0 px-2 sm:px-3"
                       onClick={() => update(day, intervals.filter((_, idx) => idx !== i))}
                     >
-                      Quitar
+                      <span aria-hidden className="text-base leading-none sm:hidden">
+                        ×
+                      </span>
+                      <span className="hidden sm:inline">Quitar</span>
                     </Button>
                   </div>
                 ))}

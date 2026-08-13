@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { apiUrl } from '../env';
+import { clientIpHeaders } from '../client-ip';
 import { custCookieName } from '../customer/cookies';
 
 /** Reenvía al backend adjuntando el customer token de la cookie del slug. */
@@ -14,6 +15,7 @@ export async function proxyCustomer(
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(await clientIpHeaders()),
       ...(init?.headers ?? {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },

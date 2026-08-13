@@ -46,9 +46,15 @@ export function BrandingForm({
       {/* La subida de archivo está construida pero apagada hasta que haya dónde
           guardar las imágenes. Se muestra deshabilitada, y no oculta, para que el
           camino quede claro y el flag la encienda sin tocar el formulario. */}
+      {/* `min-w-0` no es cosmético: el navegador le da a `fieldset` un
+          `min-inline-size: min-content` que ninguna otra regla pisa, y el input
+          de archivo (botón + “Sin archivos seleccionados”) mide más que un
+          teléfono. Sin esto la pestaña Marca se iba de ancho. */}
       <fieldset
         disabled={!logoUploadAvailable}
-        className={logoUploadAvailable ? 'space-y-2' : 'space-y-2 opacity-60'}
+        className={
+          logoUploadAvailable ? 'min-w-0 space-y-2' : 'min-w-0 space-y-2 opacity-60'
+        }
       >
         <Field
           label="Logo (archivo)"
@@ -69,7 +75,7 @@ export function BrandingForm({
             name="logoFile"
             type="file"
             accept="image/png,image/jpeg,image/webp"
-            className="block w-full cursor-pointer rounded-md border border-input bg-background p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground disabled:cursor-not-allowed"
+            className="block w-full max-w-full cursor-pointer rounded-md border border-input bg-background p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground disabled:cursor-not-allowed"
           />
         </Field>
       </fieldset>

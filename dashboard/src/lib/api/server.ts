@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { ApiError, toApiError } from '@agendox/api-client';
 import { apiUrl } from '../env';
+import { clientIpHeaders } from '../client-ip';
 import { AT } from '../auth/cookies';
 
 /**
@@ -20,6 +21,7 @@ export async function serverFetch<T>(
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(await clientIpHeaders()),
       ...(init?.headers ?? {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },

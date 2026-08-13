@@ -38,8 +38,10 @@ import {
   type WeekIntervals,
 } from '@/components/schedule/weekly-intervals-editor';
 
+// Ver `resource-create.tsx`: `min-w-0` evita que la opción más larga del
+// select (un nombre de usuario) estire la grilla y con ella la página.
 const selectClass =
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'flex h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 export function ResourceDetail({
   resource,
@@ -204,9 +206,9 @@ function ServicesAssignment({
           return (
             <div
               key={s.id}
-              className="flex items-center justify-between rounded-md border p-2"
+              className="flex items-center justify-between gap-2 rounded-md border p-2"
             >
-              <span className="text-sm">{s.name}</span>
+              <span className="min-w-0 break-words text-sm">{s.name}</span>
               <form
                 action={
                   isAssigned
@@ -259,9 +261,11 @@ function BlockedTimes({
           {blockedTimes.map((b) => (
             <div
               key={b.id}
-              className="flex items-center justify-between rounded-md border p-2 text-sm"
+              className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
             >
-              <span>
+              {/* Las fechas formateadas son tokens largos sin espacios: sin
+                  `min-w-0` la fila no podía encogerse en un teléfono. */}
+              <span className="min-w-0 break-words">
                 <Badge variant={BLOCKED_TIME_TYPE_UI[b.type].variant}>
                   {BLOCKED_TIME_TYPE_UI[b.type].label}
                 </Badge>{' '}
@@ -269,7 +273,10 @@ function BlockedTimes({
                 {formatInOrgTz(b.endsAt, timezone)}
                 {b.reason ? ` · ${b.reason}` : ''}
               </span>
-              <form action={deleteBlockedTime.bind(null, b.id, resourceId)}>
+              <form
+                className="shrink-0"
+                action={deleteBlockedTime.bind(null, b.id, resourceId)}
+              >
                 <Button type="submit" variant="ghost" size="sm">
                   Eliminar
                 </Button>

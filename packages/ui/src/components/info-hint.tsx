@@ -10,7 +10,10 @@ export interface InfoHintProps {
   children: React.ReactNode;
   /** Etiqueta accesible del botón. Nombrá el campo que explica. */
   label?: string;
-  /** Lado al que se alinea el globo, para que no se corte en pantallas chicas. */
+  /**
+   * Lado al que se alinea el globo. Por defecto se decide al abrirlo según de
+   * qué mitad de la pantalla salga el ícono, para que no se corte.
+   */
   align?: 'start' | 'end';
   className?: string;
 }
@@ -22,9 +25,14 @@ export interface InfoHintProps {
  * (`hover: hover`), porque en mobile el navegador emula un `pointerenter` junto
  * al tap y el globo se abriría y cerraría en el mismo gesto.
  */
-export function InfoHint({ children, label = 'Más información', align = 'start', className }: InfoHintProps) {
+export function InfoHint({ children, label = 'Más información', align, className }: InfoHintProps) {
   const [open, setOpen] = React.useState(false);
   const [hoverCapable, setHoverCapable] = React.useState(false);
+  // Lado calculado al abrir: el globo mide hasta 17rem y siempre nace pegado al
+  // ícono, así que si el ícono cae en la mitad derecha hay que anclarlo a la
+  // derecha o se sale de la pantalla (y en mobile eso se comía la vista).
+  const [autoAlign, setAutoAlign] = React.useState<'start' | 'end'>('start');
+  const side = align ?? autoAlign;
   const wrapperRef = React.useRef<HTMLSpanElement>(null);
   const bubbleId = React.useId();
 
@@ -50,7 +58,10 @@ export function InfoHint({ children, label = 'Más información', align = 'start
 
   const hoverHandlers = hoverCapable
     ? {
-        onPointerEnter: () => setOpen(true),
+        onPointerEnter: (event: React.PointerEvent<HTMLButtonElement>) => {
+          setAutoAlign(pickAlign(event.currentTarget));
+          setOpen(true);
+        },
         onPointerLeave: () => setOpen(false),
       }
     : {};
@@ -68,6 +79,7 @@ export function InfoHint({ children, label = 'Más información', align = 'start
           // el control asociado a esa etiqueta.
           event.preventDefault();
           event.stopPropagation();
+          setAutoAlign(pickAlign(event.currentTarget));
           setOpen((value) => !value);
         }}
         // No se abre al recibir el foco: el foco llega junto con el tap en touch,
@@ -86,7 +98,7 @@ export function InfoHint({ children, label = 'Más información', align = 'start
           role="tooltip"
           className={cn(
             'absolute top-6 z-50 w-[min(17rem,calc(100vw-2.5rem))] rounded-md border bg-popover p-2.5 text-xs font-normal leading-relaxed text-popover-foreground shadow-md',
-            align === 'end' ? 'right-0' : 'left-0',
+            side === 'end' ? 'right-0' : 'left-0',
           )}
         >
           {children}
@@ -94,4 +106,10 @@ export function InfoHint({ children, label = 'Más información', align = 'start
       ) : null}
     </span>
   );
+}
+
+/** Ancla el globo al lado que deja más aire hasta el borde de la pantalla. */
+function pickAlign(anchor: HTMLElement): 'start' | 'end' {
+  const { left } = anchor.getBoundingClientRect();
+  return left > window.innerWidth / 2 ? 'end' : 'start';
 }

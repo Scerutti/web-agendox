@@ -18,8 +18,11 @@ import { IDLE_STATE } from '@/lib/actions';
 import { userDisplayName, type UserView } from '@/lib/api/users.types';
 import { createResource } from './actions';
 
+// `min-w-0`: el ancho mínimo de un `<select>` es el de su opción más larga
+// (un nombre de usuario, un email), y dentro de una grilla eso estira la
+// columna y con ella la página. Con esto el select se recorta al ancho real.
 const selectClass =
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'flex h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 export function ResourceCreate({ users }: { users: UserView[] }) {
   const [state, action] = useActionState(createResource, IDLE_STATE);

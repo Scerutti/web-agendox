@@ -1,10 +1,17 @@
 import { ApiError, toApiError } from '@agendox/api-client';
 import { apiUrl } from '../env';
+import { clientIpHeaders } from '../client-ip';
 
 async function publicFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(apiUrl(path), {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+    // La IP del visitante viaja al backend para que su rate limit cuente por
+    // persona y no por deploy de Next (ver `lib/client-ip.ts`).
+    headers: {
+      'Content-Type': 'application/json',
+      ...(await clientIpHeaders()),
+      ...(init?.headers ?? {}),
+    },
     cache: 'no-store',
   });
   if (!res.ok) throw await toApiError(res);

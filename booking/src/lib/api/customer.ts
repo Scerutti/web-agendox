@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { ApiError, toApiError } from '@agendox/api-client';
 import type { AppointmentStatus } from '@agendox/domain';
 import { apiUrl } from '../env';
+import { clientIpHeaders } from '../client-ip';
 import { custCookieName } from '../customer/cookies';
 
 export async function customerFetch<T>(
@@ -15,6 +16,7 @@ export async function customerFetch<T>(
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(await clientIpHeaders()),
       ...(init?.headers ?? {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },

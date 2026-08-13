@@ -40,12 +40,18 @@ export default async function AppLayout({
   const showTermsGate = session.role === 'OWNER' && terms.requiresAcceptance;
 
   return (
+    // `overflow-x-clip` + `min-w-0`: sin esto, un hijo ancho (una tabla, una
+    // fila de horarios) no puede encogerse —un flex item arranca con
+    // `min-width: auto`— y estira toda la página, que es de dónde salía el
+    // scroll horizontal en mobile. Se usa `clip` y no `hidden` para no crear un
+    // contenedor de scroll. Lo que de verdad necesita ancho (la grilla del
+    // calendario, las tablas) ya tiene su propio `overflow-x-auto`.
     <div
-      className="brand-scope flex min-h-screen"
+      className="brand-scope flex min-h-screen overflow-x-clip"
       style={brandThemeVars(branding?.primaryColor, branding?.secondaryColor)}
     >
       <Sidebar role={session.role} features={features} />
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Topbar
           orgName={org?.name ?? 'Mi negocio'}
           email={session.email}
@@ -57,7 +63,7 @@ export default async function AppLayout({
           timezone={org?.timezone ?? 'UTC'}
           features={features}
         />
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
         <AppFooter />
       </div>
       {showTermsGate ? <TermsGate version={terms.currentVersion} /> : null}

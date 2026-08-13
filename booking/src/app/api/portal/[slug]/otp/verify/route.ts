@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { apiUrl } from '@/lib/env';
+import { clientIpHeaders } from '@/lib/client-ip';
 import { setCustomerCookie } from '@/lib/customer/cookies';
 
 export async function POST(
@@ -20,7 +21,7 @@ export async function POST(
 
   const r = await fetch(apiUrl(`/public/${slug}/otp/verify`), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await clientIpHeaders(req)) },
     body: JSON.stringify({ email: body.email, code: body.code }),
   });
   const data = await r.json().catch(() => ({}));

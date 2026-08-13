@@ -11,6 +11,8 @@ import {
   getSubscriptionStatus,
 } from '@/lib/api/session';
 import { ROLE_LABEL, orgStatusLabel } from '@/lib/org-ui';
+import { publicBookingUrl } from '@/lib/public-booking';
+import { PublicBookingLink } from '@/components/public-booking-link';
 
 export default async function OverviewPage() {
   const session = await getSession();
@@ -46,7 +48,19 @@ export default async function OverviewPage() {
               <span className="text-muted-foreground">Slug público: </span>
               {org?.slug ?? '—'}
             </p>
-            <p>
+            {/* El slug solo no le sirve a nadie: lo que el dueño necesita a
+                mano es el link entero para mandárselo al cliente. */}
+            <div className="space-y-1 pt-1">
+              <p className="text-muted-foreground">
+                Link público para solicitar turnos
+              </p>
+              {org?.slug ? (
+                <PublicBookingLink url={publicBookingUrl(org.slug)} />
+              ) : (
+                <p>—</p>
+              )}
+            </div>
+            <p className="pt-1">
               <span className="text-muted-foreground">Zona horaria: </span>
               {org?.timezone ?? '—'}
             </p>

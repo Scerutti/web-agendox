@@ -6,7 +6,16 @@ import { Monitor, Moon, Sun } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTheme, type ThemePreference } from './theme-provider';
 
-const OPTIONS: { value: ThemePreference; label: string; Icon: typeof Sun }[] = [
+interface ThemeOption {
+  value: ThemePreference;
+  label: string;
+  Icon: typeof Sun;
+}
+
+// Tipada como tupla no vacía para que `OPTIONS[0]` no sea `undefined` bajo
+// `noUncheckedIndexedAccess`: es lo que le da a ThemeToggleButton un valor de
+// respaldo sin recurrir a un `!`.
+const OPTIONS: [ThemeOption, ...ThemeOption[]] = [
   { value: 'light', label: 'Claro', Icon: Sun },
   { value: 'dark', label: 'Oscuro', Icon: Moon },
   { value: 'system', label: 'Automático', Icon: Monitor },
@@ -71,12 +80,14 @@ export function ThemeToggle({ className }: { className?: string }) {
 export function ThemeToggleButton({ className }: { className?: string }) {
   const { preference, setPreference } = useTheme();
 
+  // `findIndex` devuelve -1 si la preferencia guardada no es ninguna conocida;
+  // `Math.max` lo lleva a la primera opción en vez de dejar el botón sin icono.
   const index = Math.max(
     0,
     OPTIONS.findIndex((option) => option.value === preference),
   );
-  const current = OPTIONS[index]!;
-  const next = OPTIONS[(index + 1) % OPTIONS.length]!;
+  const current = OPTIONS[index] ?? OPTIONS[0];
+  const next = OPTIONS[(index + 1) % OPTIONS.length] ?? OPTIONS[0];
   const { Icon } = current;
 
   return (

@@ -3,7 +3,11 @@ import { notFound } from 'next/navigation';
 import { Badge } from '@agendox/ui';
 import { formatInOrgTz, formatMoney } from '@agendox/domain';
 import { getPublicOrg } from '@/lib/api/public';
-import { getMyAppointment } from '@/lib/api/customer';
+import {
+  getMyAppointment,
+  redirectIfSessionExpired,
+  requireCustomerSession,
+} from '@/lib/api/customer';
 import { APPOINTMENT_STATUS_UI } from '@/lib/appointment-ui';
 
 export default async function PortalAppointmentPage({
@@ -12,10 +16,17 @@ export default async function PortalAppointmentPage({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const { slug, id } = await params;
+  await requireCustomerSession(slug);
+
   const org = await getPublicOrg(slug);
   if (!org) notFound();
 
-  const appointment = await getMyAppointment(slug, id).catch(() => null);
+  // Un 401 acá es sesión vencida y se resuelve volviendo a pedir el código; el
+  // `notFound` queda para lo que sí es un turno inexistente o de otro cliente.
+  const appointment = await getMyAppointment(slug, id).catch((e: unknown) => {
+    redirectIfSessionExpired(e, slug);
+    return null;
+  });
   if (!appointment) notFound();
 
   const ui = APPOINTMENT_STATUS_UI[appointment.status];

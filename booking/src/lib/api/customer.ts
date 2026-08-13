@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { ApiError, toApiError } from '@agendox/api-client';
 import type { AppointmentStatus } from '@agendox/domain';
 import { apiUrl } from '../env';
@@ -30,6 +31,33 @@ export async function customerFetch<T>(
 export async function hasCustomerSession(slug: string): Promise<boolean> {
   const store = await cookies();
   return !!store.get(custCookieName(slug))?.value;
+}
+
+/**
+ * Corta el render de una página del portal si no hay sesión de cliente.
+ *
+ * El layout del portal ya redirige, pero **no alcanza**: Next renderiza el
+ * layout y la página en paralelo, así que la página igual dispara sus fetch
+ * antes de que el redirect del layout se aplique. Sin token, la API contesta 401
+ * y esa excepción sin manejar tapa al redirect — en dev queda el error en
+ * consola y en producción es una pantalla de error en vez de volver a la página
+ * del negocio.
+ */
+export async function requireCustomerSession(slug: string): Promise<void> {
+  if (!(await hasCustomerSession(slug))) redirect(`/${slug}`);
+}
+
+/**
+ * Vuelve a la página del negocio si el error es una sesión vencida; con
+ * cualquier otro error no hace nada y deja que decida quien llama.
+ *
+ * Es el caso que no cubre {@link requireCustomerSession}: la cookie dura un día
+ * pero el token adentro vale 30 minutos, así que hay una ventana larga en la que
+ * la cookie está pero la API rechaza. Ahí corresponde pedir el código de nuevo,
+ * no mostrar un error.
+ */
+export function redirectIfSessionExpired(error: unknown, slug: string): void {
+  if (error instanceof ApiError && error.isUnauthorized) redirect(`/${slug}`);
 }
 
 export interface CustomerProfile {

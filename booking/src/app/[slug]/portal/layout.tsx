@@ -15,6 +15,10 @@ export default async function PortalLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  // Este chequeo **no alcanza solo**: Next renderiza el layout y la página en
+  // paralelo, así que la página igual llega a pedirle datos a la API antes de
+  // que este redirect se aplique. Cada página del portal repite el corte con
+  // `requireCustomerSession`; no es redundante.
   if (!(await hasCustomerSession(slug))) {
     redirect(`/${slug}`);
   }

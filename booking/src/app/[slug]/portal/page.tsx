@@ -3,9 +3,14 @@ import { notFound } from 'next/navigation';
 import { Badge } from '@agendox/ui';
 import { formatInOrgTz } from '@agendox/domain';
 import { getPublicOrg } from '@/lib/api/public';
-import { getMe, getMyAppointments } from '@/lib/api/customer';
+import {
+  getMe,
+  getMyAppointments,
+  redirectIfSessionExpired,
+  requireCustomerSession,
+} from '@/lib/api/customer';
 import { APPOINTMENT_STATUS_UI } from '@/lib/appointment-ui';
-import type { CustomerAppointmentView } from '@/lib/api/customer';
+import type { CustomerAppointmentView, CustomerProfile } from '@/lib/api/customer';
 import { PortalLogoutButton } from './logout-button';
 import { PortalNotifications } from './portal-notifications';
 
@@ -15,13 +20,21 @@ export default async function PortalPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  // Antes de cualquier fetch: sin esto la página pide los turnos igual mientras
+  // el layout redirige, y el 401 se lleva puesto al redirect.
+  await requireCustomerSession(slug);
+
   const org = await getPublicOrg(slug);
   if (!org) notFound();
 
-  const [me, appointments] = await Promise.all([
-    getMe(slug),
-    getMyAppointments(slug),
-  ]);
+  let me: CustomerProfile | null;
+  let appointments: CustomerAppointmentView[];
+  try {
+    [me, appointments] = await Promise.all([getMe(slug), getMyAppointments(slug)]);
+  } catch (e) {
+    redirectIfSessionExpired(e, slug);
+    throw e;
+  }
 
   const now = Date.now();
   const upcoming = appointments
